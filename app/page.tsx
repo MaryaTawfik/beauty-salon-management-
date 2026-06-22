@@ -20,7 +20,7 @@ export default function Home(){
   return(
     <main className={`min-h-screen bg-[#121212] text-white overflow-x-hidden ${inter.className}`}>
       {/* 1. YOUR NAVBAR */}
-      <Navbar />
+      
 
       {/* 2. THE PERFECT RESPONSIVE SIDE-BY-SIDE HERO LAYOUT */}
       <section className="relative w-full max-w-7xl mx-auto px-6 py-12 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-12 items-center min-h-[80vh]">

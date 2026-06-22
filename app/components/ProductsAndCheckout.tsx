@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const INITIAL_PRODUCTS = [
   { id: 1, name: 'Caviar Nourishing Hair Mask', price: 120, stock: 5, description: 'Deeply restores molecular hair health with rare black caviar extracts.', img: '🧴' },
@@ -15,8 +15,23 @@ export default function ProductsAndCheckout() {
   const [selectedServicePrice, setSelectedServicePrice] = useState(85); 
   const [tipAmount, setTipAmount] = useState(0);
 
+  // --- FIX 1: AUTO-SELECT PRODUCT ON TAB CHANGE TO PREVENT FROZEN CALCULATIONS ---
+  useEffect(() => {
+    if (checkoutType === 'product' && !selectedProduct) {
+      const firstAvailable = products.find(p => p.stock > 0) || products[0];
+      if (firstAvailable) {
+        setSelectedProduct(firstAvailable.id);
+      }
+    }
+  }, [checkoutType, selectedProduct, products]);
+
   const activeProduct = products.find(p => p.id === selectedProduct);
-  const itemCost = checkoutType === 'product' && activeProduct ? activeProduct.price * productQty : selectedServicePrice;
+  
+  // --- FIX 2: STRICTLY ISOLATED LINE ITEM CALCULATIONS ---
+  const itemCost = checkoutType === 'product' 
+    ? (activeProduct && activeProduct.stock > 0 ? activeProduct.price * productQty : 0) 
+    : selectedServicePrice;
+
   const totalCost = itemCost + tipAmount;
 
   const handleQtyChange = (change: number, maxStock: number) => {
@@ -26,6 +41,10 @@ export default function ProductsAndCheckout() {
   const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (checkoutType === 'product' && activeProduct) {
+      if (activeProduct.stock < productQty) {
+        alert("Inadequate stock available.");
+        return;
+      }
       setProducts(prev => prev.map(p => p.id === activeProduct.id ? { ...p, stock: p.stock - productQty } : p));
       alert(`Success! Purchased ${productQty}x ${activeProduct.name}. Total Paid: $${totalCost}`);
       setSelectedProduct(null);
@@ -60,6 +79,7 @@ export default function ProductsAndCheckout() {
                     {prod.stock > 0 ? `${prod.stock} units remaining` : 'Out of Stock'}
                   </span>
                   <button
+                    type="button"
                     disabled={prod.stock === 0}
                     onClick={() => {
                       setSelectedProduct(prod.id);
@@ -90,10 +110,7 @@ export default function ProductsAndCheckout() {
             <button 
               type="button"
               className={`py-2.5 rounded font-medium transition ${checkoutType === 'product' ? 'bg-[#D4AF7A] text-black' : 'text-zinc-400'}`}
-              onClick={() => {
-                setCheckoutType('product');
-                if(!selectedProduct) setSelectedProduct(products[0].id);
-              }}
+              onClick={() => setCheckoutType('product')}
             >
               Product Purchase
             </button>
@@ -133,22 +150,24 @@ export default function ProductsAndCheckout() {
                   </select>
                 </div>
 
-                {activeProduct && (
+                {activeProduct && activeProduct.stock > 0 && (
                   <div className="flex items-center justify-between bg-zinc-900 border border-white/5 rounded p-3">
                     <span className="text-xs tracking-wide text-zinc-400">Select Quantity</span>
                     <div className="flex items-center space-x-3">
                       <button 
                         type="button" 
+                        disabled={productQty <= 1}
                         onClick={() => handleQtyChange(-1, activeProduct.stock)}
-                        className="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 font-bold"
+                        className="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 font-bold disabled:opacity-30"
                       >
                         -
                       </button>
                       <span className="font-mono text-sm w-4 text-center">{productQty}</span>
                       <button 
                         type="button" 
+                        disabled={productQty >= activeProduct.stock}
                         onClick={() => handleQtyChange(1, activeProduct.stock)}
-                        className="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 font-bold"
+                        className="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 font-bold disabled:opacity-30"
                       >
                         +
                       </button>
