@@ -28,31 +28,60 @@ export default function ProductsAndCheckout() {
   const activeProduct = products.find(p => p.id === selectedProduct);
   
   // --- FIX 2: STRICTLY ISOLATED LINE ITEM CALCULATIONS ---
+  
+  // --- CALCULATE DEPOSIT MILESTONES ---
   const itemCost = checkoutType === 'product' 
     ? (activeProduct && activeProduct.stock > 0 ? activeProduct.price * productQty : 0) 
     : selectedServicePrice;
 
-  const totalCost = itemCost + tipAmount;
-
-  const handleQtyChange = (change: number, maxStock: number) => {
-    setProductQty(prev => Math.max(1, Math.min(maxStock, prev + change)));
-  };
+  // Services require a 50% booking deposit. Products must be paid 100% upfront.
+  const depositBase = checkoutType === 'service' ? itemCost / 2 : itemCost;
+  const totalDueNow = depositBase + tipAmount;
+  const remainingBalance = checkoutType === 'service' ? itemCost / 2 : 0;
 
   const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (checkoutType === 'product' && activeProduct) {
       if (activeProduct.stock < productQty) {
         alert("Inadequate stock available.");
         return;
       }
       setProducts(prev => prev.map(p => p.id === activeProduct.id ? { ...p, stock: p.stock - productQty } : p));
-      alert(`Success! Purchased ${productQty}x ${activeProduct.name}. Total Paid: $${totalCost}`);
+      
+      alert(
+        "🛍️ Product Order Placed!\n\n" +
+        "Item: " + productQty + "x " + activeProduct.name + "\n" +
+        "Total Due Now: $" + totalDueNow + "\n\n" +
+        "Please send your payment screenshot to the Admin for immediate delivery verification!"
+      );
+
       setSelectedProduct(null);
       setProductQty(1);
-    } else {
-      alert(`Appointment successfully confirmed! Paid: $${totalCost} (includes $${tipAmount} tip)`);
+      setTipAmount(0);
+    } 
+    else if (checkoutType === 'service') {
+      let serviceName = "Signature Precision Haircut";
+      if (selectedServicePrice === 150) serviceName = "Balayage & Bespoke Colouring";
+      if (selectedServicePrice === 210) serviceName = "24K Gold Refining Facial Treatment";
+
+      alert(
+        "✨ 50% Booking Deposit Initiated!\n\n" +
+        "Service: " + serviceName + " ($" + selectedServicePrice + ")\n" +
+        "Paid Now (50% Deposit + Tip): $" + totalDueNow + "\n" +
+        "Remaining Balance (Pay at Salon): $" + remainingBalance + "\n\n" +
+        "⚠️ ACTION REQUIRED:\n" +
+        "Please send your transfer screenshot to the Admin. Your appointment status will stay 'PENDING' until the Admin manually approves it!"
+      );
+
+      setTipAmount(0);
     }
   };
+  
+      
+    
+
+
 
   return (
     <section id="products" className="py-24 bg-[#121212] border-t border-white/5 text-white px-6">
@@ -205,7 +234,7 @@ export default function ProductsAndCheckout() {
               <div className="h-[1px] bg-white/5 my-2" />
               <div className="flex justify-between text-sm font-medium text-[#D4AF7A]">
                 <span>Total Assessment:</span>
-                <span className="font-mono font-bold">${totalCost}</span>
+                <span className="font-mono font-bold">${totalDueNow}</span>
               </div>
             </div>
 
