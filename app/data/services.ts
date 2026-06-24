@@ -7,7 +7,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     title: "Hair Styling",
     description:
       "Luxury hairstyling services from traditional Ethiopian Shuruba to modern fashion styles.",
-    image: "/images/services/hair-main.jpg",
+    image: "/images/services/hair.jpg",
     startingPrice: "500 ETB",
     isPopular: true,
     subServices: [
@@ -20,6 +20,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "3-5 Hours",
         benefits: ["Traditional beauty", "Long-lasting style", "Perfect for special occasions"],
         images: ["/images/services/shuruba-1.jpg", "/images/services/shuruba-2.jpg"],
+        rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "h2",
@@ -30,6 +32,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1-2 Hours",
         benefits: ["Modern styling", "Professional appearance", "Customized look"],
         images: ["/images/services/classical-hair.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "h3",
@@ -40,6 +44,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "3 Hours",
         benefits: ["Wedding-ready", "Long-lasting hold", "Personalized styling"],
         images: ["/images/services/bridal-hair.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "h4",
@@ -50,6 +56,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "2 Hours",
         benefits: ["Natural appearance", "Secure fitting", "Professional finish"],
         images: ["/images/services/wig-installation.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "h5",
@@ -60,6 +68,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "3 Hours",
         benefits: ["Premium quality", "Natural look", "Long-lasting results"],
         images: ["/images/services/human-hair.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
@@ -68,7 +78,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     slug: "henna",
     title: "Henna Art",
     description: "Traditional and modern henna designs for weddings and celebrations.",
-    image: "/images/services/henna-main.jpg",
+    image: "/images/services/hina.jpg",
     startingPrice: "400 ETB",
     subServices: [
       {
@@ -80,6 +90,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "45 Minutes",
         benefits: ["Elegant patterns", "Natural henna", "Custom designs"],
         images: ["/images/services/hand-henna.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "he2",
@@ -90,6 +102,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1 Hour",
         benefits: ["Traditional beauty", "Detailed artwork", "Long-lasting color"],
         images: ["/images/services/leg-henna.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "he3",
@@ -100,6 +114,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "3 Hours",
         benefits: ["Wedding-ready", "Premium design", "Unique artwork"],
         images: ["/images/services/bridal-henna.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
@@ -108,7 +124,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     slug: "nails",
     title: "Nail Artistry",
     description: "Premium nail care, nail art, manicures, and pedicures.",
-    image: "/images/services/nails-main.jpg",
+    image: "/images/services/nail.jpg",
     startingPrice: "300 ETB",
     subServices: [
       {
@@ -120,6 +136,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "45 Minutes",
         benefits: ["Healthy nails", "Clean finish", "Relaxing treatment"],
         images: ["/images/services/manicure.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "n2",
@@ -130,6 +148,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1 Hour",
         benefits: ["Soft skin", "Healthy nails", "Stress relief"],
         images: ["/images/services/pedicure.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "n3",
@@ -140,6 +160,9 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "90 Minutes",
         benefits: ["Chip resistant", "High shine", "Long-lasting"],
         images: ["/images/services/gel-nails.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
+
       },
       {
         id: "n4",
@@ -150,6 +173,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "2 Hours",
         benefits: ["Custom designs", "Luxury finish", "Unique appearance"],
         images: ["/images/services/nail-art.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
@@ -158,7 +183,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     slug: "makeup",
     title: "Makeup Studio",
     description: "Professional makeup services for every occasion.",
-    image: "/images/services/makeup-main.jpg",
+    image: "/images/services/makeuo.jpg",
     startingPrice: "700 ETB",
     subServices: [
       {
@@ -170,6 +195,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1 Hour",
         benefits: ["Natural finish", "Skin-friendly products", "Perfect for everyday wear"],
         images: ["/images/services/natural-makeup.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "m2",
@@ -180,6 +207,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "90 Minutes",
         benefits: ["Long-lasting", "Camera-ready", "Customized style"],
         images: ["/images/services/party-makeup.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "m3",
@@ -190,6 +219,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "2-3 Hours",
         benefits: ["Premium products", "Long wear", "Flawless finish"],
         images: ["/images/services/bridal-makeup.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
@@ -198,7 +229,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     slug: "spa",
     title: "Spa & Wellness",
     description: "Relax, refresh, and rejuvenate with premium spa treatments.",
-    image: "/images/services/spa-main.jpg",
+    image: "/images/services/spa.jpg",
     startingPrice: "600 ETB",
     subServices: [
       {
@@ -210,6 +241,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1 Hour",
         benefits: ["Healthy skin", "Hydration", "Natural glow"],
         images: ["/images/services/facial.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "s2",
@@ -220,6 +253,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1 Hour",
         benefits: ["Stress relief", "Muscle relaxation", "Improved circulation"],
         images: ["/images/services/massage.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "s3",
@@ -230,6 +265,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "1 Hour",
         benefits: ["Soft skin", "Removes dead skin", "Healthy glow"],
         images: ["/images/services/body-scrub.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
@@ -238,7 +275,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     slug: "hair-coloring",
     title: "Hair Coloring",
     description: "Transform your look with professional hair coloring services.",
-    image: "/images/services/hair-color-main.jpg",
+    image: "/images/services/haircolor.jpg",
     startingPrice: "1200 ETB",
     subServices: [
       {
@@ -250,6 +287,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "2-3 Hours",
         benefits: ["Rich color", "Professional application", "Long-lasting shine"],
         images: ["/images/services/full-color.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
       {
         id: "c2",
@@ -260,6 +299,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "3 Hours",
         benefits: ["Modern appearance", "Natural blend", "Premium finish"],
         images: ["/images/services/highlights.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
@@ -268,7 +309,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
     slug: "bridal",
     title: "Royal Bridal Package",
     description: "The ultimate luxury bridal experience with complete beauty services.",
-    image: "/images/services/bridal-main.jpg",
+    image: "/images/services/bd3.png",
     startingPrice: "15,000 ETB",
     isPremium: true,
     subServices: [
@@ -281,6 +322,8 @@ export const SERVICES_DATA: ServiceCategory[] = [
         duration: "Full Day",
         benefits: ["Bridal Hairstyle", "Bridal Makeup", "Bridal Henna", "Luxury Nail Service", "Facial Treatment", "VIP Consultation"],
         images: ["/images/services/bridal-package-1.jpg", "/images/services/bridal-package-2.jpg"],
+         rating: 4.9,
+        reviewsCount: 120
       },
     ],
   },
