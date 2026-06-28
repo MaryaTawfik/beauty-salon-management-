@@ -2,23 +2,28 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // 1. Get the 'isLoggedIn' cookie
-  const isLoggedIn = request.cookies.get('isLoggedIn');
+  // 1. Get cookie values safely (checking .value)
+  const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true'; 
+  const isAdmin = request.cookies.get('role')?.value === 'admin';
   
-  // 2. Check if the current URL starts with /services
-  // Note: it is "startsWith" (with an 's'), not "startWith"
-  const isProtectedPath = request.nextUrl.pathname.startsWith('/services');
+  const { pathname } = request.nextUrl;
 
-  // 3. Logic: If path is protected and user NOT logged in, redirect to sign-in
-  if (isProtectedPath && !isLoggedIn) {
+  // 2. Protect /services routes
+  if (pathname.startsWith('/services') && !isLoggedIn) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
-  // 4. Otherwise, continue as normal
+  // 3. Protect /admin routes
+  if (pathname.startsWith('/admin')) {
+    if (!isLoggedIn || !isAdmin) {
+      return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+  }
+
+  // 4. Otherwise, continue normal execution
   return NextResponse.next();
 }
 
-// Ensure the middleware only runs on specific routes to save performance
 export const config = {
-  matcher: ['/services/:path*'],
+  matcher: ['/services/:path*', '/admin/:path*'],
 };

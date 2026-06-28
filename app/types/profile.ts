@@ -20,3 +20,15 @@ export interface UserProfile {
   totalSpent: string;
   avatar?: string;
 }
+
+
+export type NotificationType = 'appointment' | 'promotion' | 'reward';
+
+export interface SalonNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  time: string;
+  isRead: boolean;
+}

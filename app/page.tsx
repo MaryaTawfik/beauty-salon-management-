@@ -10,7 +10,7 @@ import ServiceGrid from "@/components/services/ServiceGrid";
 import StylistGrid from "@/components/home/StylistGrid"; // Make sure to create this component
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 import ProductsAndCheckout from "./components/ProductsAndCheckout";
-
+import ProductSection from "@/app/components/products/ProductSection";
 // Data
 import { TESTIMONIALS } from "./data/testimonials";
 
@@ -20,7 +20,7 @@ const inter = Inter({ subsets: ['latin'] });
 export default function Home() {
   return (
     <main className={`min-h-screen bg-[#121212] text-white overflow-x-hidden ${inter.className}`}>
-      <Navbar />
+      {/* <Navbar /> */}
 
       {/* 1. Hero Section */}
       <Hero />
@@ -36,8 +36,13 @@ export default function Home() {
       </section>
 
       {/* 4. Products Section */}
-      <section id="products">
+      {/* <section id="products">
         <ProductsAndCheckout />
+        
+      </section> */}
+
+       <section id="products">
+        <ProductSection />
       </section>
 
       {/* 5. Testimonials Section */}
