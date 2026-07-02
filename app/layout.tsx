@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/app/components/Navbar"; // Adjusted path to your components
-import Footer from "@/app/components/Footer"; // Adjusted path to your components
+
+// 1. Imports - Ensure these paths match your folder structure exactly
+import Navbar from "@/app/components/Navbar";
+import Footer from "@/app/components/Footer";
 import { CartProvider } from "@/app/context/CartContext"; 
+import { ServiceProvider } from "@/app/context/ServiceContext";
+import { ProductProvider } from "@/app/context/ProductContext"; // <--- ADD THIS IMPORT
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,17 +34,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#121212] text-white min-h-screen flex flex-col`}
       >
+        {/* 2. Nesting Providers: The "Power Grid" of your app */}
         <CartProvider>
-        {/* Global Navigation */}
-        <Navbar />
+          <ProductProvider> {/* <--- ADD THIS WRAPPER */}
+            <ServiceProvider>
+              
+              <Navbar />
 
-        {/* Dynamic Page Content */}
-        <main className="flex-grow">
-          {children}
-        </main>
+              <main className="flex-grow">
+                {children}
+              </main>
 
-        {/* Global Footer */}
-        <Footer />
+              <Footer />
+              
+            </ServiceProvider>
+          </ProductProvider>
         </CartProvider>
       </body>
     </html>
