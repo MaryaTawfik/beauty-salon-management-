@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, use, useEffect } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import ServiceGallery from "@/components/services/ServiceGallery";
@@ -9,39 +9,39 @@ import BookingModal from "../../../../components/services/booking/BookingModal";
 import { CheckCircle2, Clock, Tag, Calendar, ArrowLeft, Star, Heart, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getFavorites, toggleFavoriteId } from "@/lib/favorites";
-import { cn } from "@/lib/utils";
+import { getActiveUser } from "@/lib/auth-utils";
 import { useServices } from "@/app/context/ServiceContext";
+import { cn } from "@/lib/utils";
 
 export default function ServiceDetailPage({ params }: { params: Promise<{ category: string; slug: string }> }) {
-  // 1. Correctly unwrap params from the URL
   const resolvedParams = use(params);
-  const categorySlug = resolvedParams.category;
-  const slug = resolvedParams.slug;
-
-  // 2. Correctly pull categories from Global Context
+  const router = useRouter();
   const { categories, isMounted: servicesLoaded } = useServices();
 
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 3. Find dynamic data using the slugs from the URL
-  const categoryData = categories.find((c) => c.slug === categorySlug);
-  const service = categoryData?.subServices.find((s) => s.slug === slug);
+  const categoryData = categories.find((c) => c.slug === resolvedParams.category);
+  const service = categoryData?.subServices.find((s) => s.slug === resolvedParams.slug);
 
   useEffect(() => {
     setIsMounted(true);
     if (service) {
-      const savedFavs = getFavorites();
-      setIsFavorited(savedFavs.includes(service.id));
+      const favs = getFavorites();
+      setIsFavorited(favs.includes(service.id));
     }
   }, [service]);
 
-  // Loading and Error checks
   if (!isMounted || !servicesLoaded) return <div className="min-h-screen bg-[#121212]" />;
   if (!service) notFound();
 
   const handleToggleFavorite = () => {
+    const user = getActiveUser();
+    if (!user) {
+      router.push('/sign-in');
+      return;
+    }
     toggleFavoriteId(service.id);
     setIsFavorited(!isFavorited);
   };
@@ -50,7 +50,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
     <main className="min-h-screen bg-[#121212] text-white pt-32 pb-20 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-12">
-          <Link href={`/services/${categorySlug}`} className="flex items-center gap-2 text-[#D4AF7A] uppercase tracking-[0.2em] text-xs hover:opacity-70 transition-opacity">
+          <Link href={`/services/${resolvedParams.category}`} className="flex items-center gap-2 text-[#D4AF7A] uppercase tracking-[0.2em] text-xs hover:opacity-70 transition-opacity">
             <ArrowLeft size={16} /> Back to {categoryData?.title}
           </Link>
           <div className="flex gap-4">
