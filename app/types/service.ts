@@ -9,6 +9,9 @@ export interface SubService{
     duration: String;
     benefits:string[];
     images: string[];
+    rating: number;
+    reviewsCount: number;
+    
    
 }
 
@@ -22,4 +25,25 @@ export interface ServiceCategory {
   isPopular?: boolean;   // To show the "Popular" badge
   isPremium?: boolean;   // Special flag for the Bridal Package
   subServices: SubService[];
+}
+
+export interface PastService {
+  id: string;
+  name: string;
+  date: string;
+  price: string;
+  stylist: string;
+  image: string;
+  rating?: number;
+  review?: string;
+}
+
+
+export interface Stylist {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  rating: number;
+  specialty: string;
 }
