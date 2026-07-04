@@ -8,6 +8,7 @@ import { CartProvider } from "@/app/context/CartContext";
 import { ServiceProvider } from "@/app/context/ServiceContext";
 import { ProductProvider } from "@/app/context/ProductContext";
 import { BookingProvider } from "@/app/context/BookingContext"; // ADDED
+import { ChatProvider } from "./context/ChatContext";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -25,9 +26,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <ProductProvider>
             <ServiceProvider>
               <BookingProvider> {/* WRAP EVERYTHING */}
+                <ChatProvider>
                 <Navbar />
                 <main className="flex-grow">{children}</main>
                 <Footer />
+                </ChatProvider>
               </BookingProvider>
             </ServiceProvider>
           </ProductProvider>
