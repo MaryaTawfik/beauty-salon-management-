@@ -1,29 +1,14 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getActiveUser } from '@/lib/auth-utils';
-
-export interface AvailableSlot {
-  id: string;
-  date: string;
-  time: string;
-  isBooked: boolean;
-}
-
-export interface UserBooking {
-  id: string;
-  userEmail: string;
-  serviceName: string;
-  date: string;
-  time: string;
-  price: string;
-  status: 'Upcoming' | 'Completed' | 'Cancelled';
-}
+import { AvailableSlot, UserBooking } from '@/app/types/booking';
 
 interface BookingContextType {
   availableSlots: AvailableSlot[];
   userBookings: UserBooking[];
   addAvailableSlot: (slot: AvailableSlot) => void;
-  bookAppointment: (serviceName: string, price: string, slotId: string) => void;
+  removeAvailableSlot: (id: string) => void;
+  bookAppointment: (serviceName: string, price: string, slotId: string, userName: string, userPhone: string, stylistName: string) => void;
   cancelAppointment: (id: string) => void;
   isMounted: boolean;
 }
@@ -51,18 +36,21 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   }, [availableSlots, userBookings, isMounted]);
 
   const addAvailableSlot = (slot: AvailableSlot) => setAvailableSlots(prev => [...prev, slot]);
+  const removeAvailableSlot = (id: string) => setAvailableSlots(prev => prev.filter(s => s.id !== id));
 
-  const bookAppointment = (serviceName: string, price: string, slotId: string) => {
+  const bookAppointment = (serviceName: string, price: string, slotId: string, userName: string, userPhone: string, stylistName: string) => {
     const user = getActiveUser();
     if (!user) return;
-
     const slot = availableSlots.find(s => s.id === slotId);
     if (!slot) return;
 
     const newBooking: UserBooking = {
       id: Math.random().toString(36).substr(2, 9),
       userEmail: user.email,
+      userName,
+      userPhone,
       serviceName,
+      stylistName,
       date: slot.date,
       time: slot.time,
       price,
@@ -77,13 +65,11 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
     const booking = userBookings.find(b => b.id === id);
     if (!booking) return;
     setUserBookings(prev => prev.filter(b => b.id !== id));
-    setAvailableSlots(prev => prev.map(s => 
-      (s.date === booking.date && s.time === booking.time) ? { ...s, isBooked: false } : s
-    ));
+    setAvailableSlots(prev => prev.map(s => (s.date === booking.date && s.time === booking.time) ? { ...s, isBooked: false } : s));
   };
 
   return (
-    <BookingContext.Provider value={{ availableSlots, userBookings, addAvailableSlot, bookAppointment, cancelAppointment, isMounted }}>
+    <BookingContext.Provider value={{ availableSlots, userBookings, addAvailableSlot, removeAvailableSlot, bookAppointment, cancelAppointment, isMounted }}>
       {children}
     </BookingContext.Provider>
   );
