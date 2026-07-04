@@ -7,13 +7,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, User, LogOut, Phone, 
   ChevronRight, ShoppingBag, Search, MessageSquare,
-  LayoutDashboard // Added for the Admin icon
+  LayoutDashboard, CalendarDays // Added CalendarDays for booking
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Playfair_Display } from 'next/font/google';
 import { useCart } from '@/app/context/CartContext';
+import { useBookings } from '@/app/context/BookingContext'; // Added
+import { getActiveUser } from '@/lib/auth-utils';
 import CartDrawer from './products/CartDrawer';
 import SearchOverlay from './search/SearchOverlay';
+import BookingModal from '@/components/services/booking/BookingModal'; // Added
 
 const playfair = Playfair_Display({ subsets: ['latin'], style: ['italic'] });
 
@@ -21,12 +24,14 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false); // New State
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // Admin state
+  const [isAdmin, setIsAdmin] = useState(false);
   const [hasUnreadChat, setHasChatNotification] = useState(false);
   
   const { totalItems, isMounted } = useCart();
+  const { availableSlots } = useBookings(); // Pull availability for badge/logic
   const pathname = usePathname();
   const router = useRouter();
 
@@ -56,16 +61,16 @@ export default function Navbar() {
     checkStatus();
   }, [pathname]);
 
+  // Lock body scroll when any overlay is active
   useEffect(() => {
-    if (isOpen || isCartOpen || isSearchOpen) {
+    if (isOpen || isCartOpen || isSearchOpen || isBookingOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-  }, [isOpen, isCartOpen, isSearchOpen]);
+  }, [isOpen, isCartOpen, isSearchOpen, isBookingOpen]);
 
   const handleLogout = () => {
-    // Clear both cookies
     document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     setIsLoggedIn(false);
@@ -73,6 +78,16 @@ export default function Navbar() {
     setIsOpen(false);
     router.refresh();
     router.push('/');
+  };
+
+  // Auth Guard for the Global "Book Now" Button
+  const handleBookingClick = () => {
+    const user = getActiveUser();
+    if (!user) {
+      router.push('/sign-in');
+    } else {
+      setIsBookingOpen(true);
+    }
   };
 
   const navLinks = [
@@ -95,12 +110,14 @@ export default function Navbar() {
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
+          {/* LOGO */}
           <Link href="/" className="relative z-[130]">
             <span className={cn("text-xl md:text-2xl text-white font-light tracking-tighter", playfair.className)}>
               The<span className="text-[#D4AF7A]">Salon</span>
             </span>
           </Link>
 
+          {/* DESKTOP LINKS */}
           <div className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => (
               <Link key={link.name} href={link.href} className="text-[10px] uppercase tracking-[0.4em] text-white/60 hover:text-[#D4AF7A] transition-colors">
@@ -110,6 +127,16 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-5">
+            
+            {/* NEW: GLOBAL BOOKING BUTTON */}
+            <button 
+              onClick={handleBookingClick}
+              className="hidden xl:flex items-center gap-2 bg-[#D4AF7A]/10 border border-[#D4AF7A]/30 text-[#D4AF7A] px-5 py-2 text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[#D4AF7A] hover:text-[#121212] transition-all duration-500"
+            >
+              <CalendarDays size={14} />
+              Book Ritual
+            </button>
+
             <button onClick={() => setIsSearchOpen(true)} className="p-2 text-white/80 hover:text-[#D4AF7A] transition-colors">
               <Search size={19} strokeWidth={1.5} />
             </button>
@@ -134,10 +161,9 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-6 border-l border-white/10 ml-4 pl-6">
               {isLoggedIn ? (
                 <div className="flex items-center gap-6">
-                  {/* NEW: Admin Dashboard Button */}
                   {isAdmin && (
                     <Link href="/admin">
-                      <button className="bg-[#D4AF7A] text-[#121212] px-4 py-1.5 text-[9px] font-bold uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_15px_rgba(212,175,122,0.3)]">
+                      <button className="bg-[#D4AF7A] text-[#121212] px-4 py-1.5 text-[9px] font-bold uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-[#D4AF7A]/20">
                         Admin Panel
                       </button>
                     </Link>
@@ -151,13 +177,14 @@ export default function Navbar() {
                 </div>
               ) : (
                 <Link href="/sign-in">
-                  <button className="px-6 py-2 border border-[#D4AF7A]/40 text-white text-[9px] uppercase tracking-[0.2em] transition-all duration-300 hover:bg-[#D4AF7A] hover:text-black">
+                  <button className="px-6 py-2 border border-[#D4AF7A]/40 text-white text-[9px] uppercase tracking-[0.2em] transition-all duration-300 hover:bg-[#D4AF7A] hover:text-[#121212]">
                     Sign In
                   </button>
                 </Link>
               )}
             </div>
 
+            {/* MOBILE MENU TOGGLE */}
             <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden relative z-[130] text-white p-2 ml-2">
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -178,12 +205,15 @@ export default function Navbar() {
                     <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-all" />
                   </Link>
                 ))}
+                {/* Mobile Specific Booking Link */}
+                <button onClick={handleBookingClick} className="text-[#D4AF7A] text-xs uppercase tracking-[0.4em] flex justify-between items-center border-t border-white/5 pt-8">
+                   Book Your Ritual <CalendarDays size={18} />
+                </button>
               </div>
               
               <div className="mt-auto p-8 border-t border-white/5 bg-white/[0.01] space-y-6">
                 {isLoggedIn ? (
                    <div className="flex flex-col gap-5">
-                     {/* Mobile Admin Link */}
                      {isAdmin && (
                         <Link href="/admin" onClick={() => setIsOpen(false)} className="text-[#D4AF7A] text-xs uppercase tracking-widest flex items-center gap-3">
                           <LayoutDashboard size={16}/> Admin Dashboard
@@ -197,7 +227,7 @@ export default function Navbar() {
                      </button>
                    </div>
                 ) : (
-                   <Link href="/sign-in" onClick={() => setIsOpen(false)} className="bg-[#D4AF7A] text-black py-4 w-full block text-center text-[10px] uppercase font-bold tracking-widest">Sign In</Link>
+                   <Link href="/sign-in" onClick={() => setIsOpen(false)} className="bg-[#D4AF7A] text-black py-4 w-full block text-center text-[10px] uppercase font-bold tracking-widest shadow-xl shadow-[#D4AF7A]/10">Sign In</Link>
                 )}
               </div>
             </motion.div>
@@ -205,8 +235,17 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
+      {/* GLOBAL OVERLAYS */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      
+      {/* GLOBAL BOOKING MODAL */}
+      <BookingModal 
+        isOpen={isBookingOpen} 
+        onClose={() => setIsBookingOpen(false)} 
+        serviceName="General Consultation" // User picks specific service inside or from list
+        price="Variable"
+      />
     </>
   );
 }

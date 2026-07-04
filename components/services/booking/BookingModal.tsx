@@ -1,111 +1,110 @@
 "use client";
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, User, Phone, MessageSquare, Check, Clock } from 'lucide-react';
+import { X, Calendar, Check, Clock, Loader2, AlertCircle } from 'lucide-react';
+import { useBookings } from '@/app/context/BookingContext';
+import { getActiveUser } from '@/lib/auth-utils';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   serviceName: string;
-  // NEW: Callback to send data back to the parent
-  onSuccess?: (data: { date: string; time: string }) => void;
+  price: string;
 }
 
-export default function BookingModal({ isOpen, onClose, serviceName, onSuccess }: BookingModalProps) {
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  
-  // NEW: Input states
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+export default function BookingModal({ isOpen, onClose, serviceName, price }: BookingModalProps) {
+  const { availableSlots, bookAppointment, isMounted } = useBookings();
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // 1. Send the new data back to the Appointments Page
-    if (onSuccess) {
-      onSuccess({ 
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
-        time 
-      });
+  const handleConfirm = () => {
+    const user = getActiveUser();
+    if (!user) {
+      router.push('/sign-in');
+      return;
     }
 
-    setIsSubmitted(true);
+    if (!selectedSlotId) return;
+
+    setIsSubmitting(true);
     setTimeout(() => {
-      setIsSubmitted(false);
-      onClose();
-    }, 2000);
+      bookAppointment(serviceName, price, selectedSlotId);
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        onClose();
+        router.push('/profile/appointments');
+      }, 2000);
+    }, 1500);
   };
+
+  if (!isMounted) return null;
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-          />
-
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-lg bg-[#1a1a1a] border border-[#D4AF7A]/30 p-8 shadow-2xl overflow-hidden"
-          >
-            <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-[#D4AF7A]">
-              <X size={24} />
-            </button>
-
-            {isSubmitted ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 space-y-4">
-                <div className="w-20 h-20 bg-[#D4AF7A] rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Check size={40} className="text-black" />
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+          
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-[#1a1a1a] border border-[#D4AF7A]/30 w-full max-w-lg shadow-2xl p-8 overflow-hidden">
+            {isSuccess ? (
+              <div className="text-center py-10 space-y-4">
+                <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20">
+                  <Check size={40} />
                 </div>
-                <h2 className="text-3xl font-light italic text-white">Confirmed</h2>
-                <p className="text-white/60">Your appointment for <span className="text-[#D4AF7A]">{serviceName}</span> has been updated.</p>
-              </motion.div>
+                <h3 className="text-2xl text-white font-light italic">Ritual Scheduled</h3>
+                <p className="text-white/40 text-sm">We've reserved your session for {serviceName}.</p>
+              </div>
             ) : (
               <>
-                <div className="mb-8">
-                  <h2 className="text-[#D4AF7A] text-sm uppercase tracking-[0.3em] mb-2">Reschedule / Book</h2>
-                  <h3 className="text-3xl text-white font-light italic">{serviceName}</h3>
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h2 className="text-[#D4AF7A] text-[10px] uppercase tracking-[0.3em] font-bold">Secure Reservation</h2>
+                    <h3 className="text-2xl text-white font-light italic mt-1">{serviceName}</h3>
+                  </div>
+                  <button onClick={onClose} className="text-white/20 hover:text-white"><X size={24}/></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-4">
-                    {/* Date Input */}
-                    <div className="relative group">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF7A]" size={18} />
-                      <input 
-                        required
-                        type="date" 
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#D4AF7A] transition-colors [color-scheme:dark]"
-                      />
-                    </div>
-
-                    {/* Time Input */}
-                    <div className="relative group">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF7A]" size={18} />
-                      <input 
-                        required
-                        type="time" 
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#D4AF7A] transition-colors [color-scheme:dark]"
-                      />
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] uppercase text-white/40 tracking-widest">Select Available Time</label>
+                    <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                      {availableSlots.filter(s => !s.isBooked).length > 0 ? (
+                        availableSlots.filter(s => !s.isBooked).map(slot => (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => setSelectedSlotId(slot.id)}
+                            className={cn(
+                              "p-4 text-[10px] uppercase border transition-all text-center flex flex-col items-center gap-1",
+                              selectedSlotId === slot.id ? "bg-[#D4AF7A] border-[#D4AF7A] text-black font-bold" : "bg-white/5 border-white/5 text-white/60 hover:border-white/20"
+                            )}
+                          >
+                            <Calendar size={12}/> {slot.date}
+                            <Clock size={12}/> {slot.time}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="col-span-2 py-8 text-center border border-dashed border-white/10">
+                          <p className="text-white/20 text-[10px] uppercase italic">No slots currently available</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <button type="submit" className="w-full bg-[#D4AF7A] text-[#121212] font-bold py-4 uppercase tracking-[0.2em] text-xs hover:bg-white transition-all">
-                    Confirm Changes
+                  <button
+                    onClick={handleConfirm}
+                    disabled={!selectedSlotId || isSubmitting}
+                    className="w-full bg-[#D4AF7A] text-[#121212] py-4 font-bold uppercase tracking-[0.2em] text-xs transition-all hover:bg-white disabled:opacity-30 flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : "Confirm Appointment"}
                   </button>
-                </form>
+                </div>
               </>
             )}
           </motion.div>
