@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Playfair_Display } from 'next/font/google';
 import { useCart } from '@/app/context/CartContext';
-import { useBookings } from '@/app/context/BookingContext';
+import { useChat } from '@/app/context/ChatContext'; 
 import { getActiveUser } from '@/lib/auth-utils';
 import CartDrawer from './products/CartDrawer';
 import SearchOverlay from './search/SearchOverlay';
@@ -28,9 +28,9 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [hasUnreadChat, setHasChatNotification] = useState(false);
   
   const { totalItems, isMounted } = useCart();
+  const { userUnreadCount } = useChat(); // Pull the live unread count
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,16 +45,6 @@ export default function Navbar() {
       const user = getActiveUser();
       setIsLoggedIn(!!user);
       setIsAdmin(user?.role === 'admin');
-
-      const chatHistory = localStorage.getItem('salon_chat');
-      if (chatHistory && pathname !== '/support') {
-        const messages = JSON.parse(chatHistory);
-        if (messages.length > 0 && messages[messages.length - 1].sender === 'salon') {
-          setHasChatNotification(true);
-        }
-      } else if (pathname === '/support') {
-        setHasChatNotification(false);
-      }
     };
     checkStatus();
   }, [pathname]);
@@ -80,11 +70,8 @@ export default function Navbar() {
 
   const handleBookingClick = () => {
     const user = getActiveUser();
-    if (!user || !user.email) {
-      router.push('/sign-in');
-    } else {
-      setIsBookingOpen(true);
-    }
+    if (!user) router.push('/sign-in');
+    else setIsBookingOpen(true);
   };
 
   const navLinks = [
@@ -100,9 +87,7 @@ export default function Navbar() {
       <nav className={cn("fixed top-0 w-full z-[100] transition-all duration-500", isScrolled ? "bg-[#121212]/95 backdrop-blur-md border-b border-white/5 py-3 px-4 md:px-10" : "bg-transparent py-6 px-6 md:px-10")}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="relative z-[130]">
-            <span className={cn("text-xl md:text-2xl text-white font-light tracking-tighter", playfair.className)}>
-              The<span className="text-[#D4AF7A]">Salon</span>
-            </span>
+            <span className={cn("text-xl md:text-2xl text-white font-light tracking-tighter", playfair.className)}>The<span className="text-[#D4AF7A]">Salon</span></span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-10">
@@ -112,18 +97,25 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-5">
-            <button 
-              onClick={handleBookingClick}
-              className="hidden xl:flex items-center gap-2 bg-[#D4AF7A]/10 border border-[#D4AF7A]/30 text-[#D4AF7A] px-5 py-2 text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[#D4AF7A] hover:text-[#121212] transition-all"
-            >
+            <button onClick={handleBookingClick} className="hidden xl:flex items-center gap-2 bg-[#D4AF7A]/10 border border-[#D4AF7A]/30 text-[#D4AF7A] px-5 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-[#D4AF7A] hover:text-[#121212] transition-all duration-500">
               <CalendarDays size={14} /> Book Ritual
             </button>
 
             <button onClick={() => setIsSearchOpen(true)} className="p-2 text-white/80 hover:text-[#D4AF7A] transition-colors"><Search size={19} strokeWidth={1.5} /></button>
 
-            <Link href="/support" className="relative p-2 text-white/80 hover:text-[#D4AF7A] transition-colors">
-              <MessageSquare size={19} strokeWidth={1.5} />
-              {isMounted && hasUnreadChat && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF7A] rounded-full shadow-[0_0_8px_#D4AF7A]" />}
+            {/* MESSAGE ICON WITH RED NUMERIC BADGE */}
+            <Link href="/support" className="relative p-2 group">
+              <MessageSquare size={19} strokeWidth={1.5} className={cn("transition-colors", userUnreadCount > 0 ? "text-[#D4AF7A]" : "text-white/80 hover:text-[#D4AF7A]")} />
+              
+              {isMounted && isLoggedIn && userUnreadCount > 0 && (
+                <motion.span 
+                  initial={{ scale: 0 }} 
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center bg-red-600 text-white text-[9px] font-bold rounded-full shadow-lg border border-[#121212]"
+                >
+                  {userUnreadCount}
+                </motion.span>
+              )}
             </Link>
 
             <button onClick={() => setIsCartOpen(true)} className="relative group p-2 transition-transform active:scale-90">
@@ -149,18 +141,32 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* MODALS AND DRAWERS */}
+      {/* MOBILE DRAWER */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-sm lg:hidden" />
+            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed top-0 right-0 h-full w-[85%] max-w-sm z-[120] bg-[#1a1a1a] border-l border-white/5 lg:hidden flex flex-col" >
+              <div className="flex flex-col p-8 pt-24 space-y-8">
+                {navLinks.map((link) => (
+                  <Link key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="text-white hover:text-[#D4AF7A] text-xs uppercase tracking-[0.4em] flex justify-between items-center group">
+                    {link.name}
+                    {link.name === 'Concierge' && userUnreadCount > 0 && (
+                       <span className="h-4 w-4 flex items-center justify-center bg-red-600 rounded-full text-[8px] font-bold text-white">{userUnreadCount}</span>
+                    )}
+                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-all" />
+                  </Link>
+                ))}
+                <button onClick={handleBookingClick} className="text-[#D4AF7A] text-xs uppercase tracking-[0.4em] flex justify-between items-center border-t border-white/5 pt-8">Book Ritual <CalendarDays size={18} /></button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      
-      {/* 
-        FIXED: Removed serviceName and price props here. 
-        This allows the modal to show the "Select Ritual" dropdown when opened from Navbar.
-      */}
-      <BookingModal 
-        isOpen={isBookingOpen} 
-        onClose={() => setIsBookingOpen(false)} 
-      />
+      <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
     </>
   );
 }

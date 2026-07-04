@@ -1,169 +1,95 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, Headset, ChevronDown, Calendar, Gift, Tag, Bell
-} from 'lucide-react';
+import { useChat } from '@/app/context/ChatContext';
+import { getActiveUser } from '@/lib/auth-utils';
+import { Send, Headset } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
-export default function SupportPage() {
-  const [messages, setMessages] = useState<any[]>([]);
+export default function UserSupport() {
+  const { allMessages, sendMessage, markAsUserRead, isMounted } = useChat();
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-  
-  // Ref for the scrollable container
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  // Ref for the anchor at the bottom of messages
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const user = getActiveUser();
+  const router = useRouter();
+  const endRef = useRef<HTMLDivElement>(null);
 
-  // 1. Initial Load & Persistence
+  const myChat = allMessages.filter(m => 
+    m.senderEmail === user?.email || m.receiverEmail === user?.email
+  );
+
+  // 1. CLEAR NOTIFICATION logic: Runs when user looks at the page
   useEffect(() => {
-    setIsMounted(true);
-    const saved = localStorage.getItem('salon_chat');
-    if (saved) {
-      setMessages(JSON.parse(saved));
-    } else {
-      setMessages([{
-        id: 'init',
-        text: "Welcome to L'ÉLITE. I am your digital concierge. How may I assist you today?",
-        sender: 'salon',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
+    if (user?.email) {
+      markAsUserRead(user.email);
     }
-  }, []);
+  }, [allMessages.length, user?.email]);
 
-  // 2. AUTO-SCROLL LOGIC
-  // This triggers every time the messages array updates
   useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('salon_chat', JSON.stringify(messages));
-      
-      // Smooth scroll to the bottom anchor
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isMounted, isTyping]);
+    if (!user) router.push('/sign-in');
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [myChat]);
 
-  const handleSendMessage = (text: string) => {
-    if (!text.trim()) return;
-    const userMsg = {
-      id: Date.now().toString(),
-      text,
-      sender: 'user',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    
-    setIsTyping(true);
-    setTimeout(() => {
-      const salonMsg = {
-        id: (Date.now() + 1).toString(),
-        text: "Our concierge team has been notified. We will respond to your request shortly.",
-        sender: 'salon',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, salonMsg]);
-      setIsTyping(false);
-    }, 2000);
-  };
-
-  if (!isMounted) return null;
+  if (!isMounted || !user) return null;
 
   return (
     <main className="min-h-screen bg-[#121212] pt-24 pb-10 px-4">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 h-[80vh]">
+      <div className="max-w-4xl mx-auto flex flex-col h-[85vh] bg-[#1a1a1a] border border-white/10 shadow-2xl relative overflow-hidden">
         
-        {/* LEFT COLUMN: FAQ (Remains the same) */}
-        <div className="hidden lg:block space-y-8 overflow-y-auto pr-4 custom-scrollbar">
-           <h1 className="text-3xl font-light italic text-white tracking-tight">Concierge</h1>
-           {/* ... FAQ content ... */}
+        {/* Header */}
+        <div className="p-6 border-b border-white/5 bg-[#121212] flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-[#D4AF7A]/10 flex items-center justify-center text-[#D4AF7A] shadow-[0_0_15px_rgba(212,175,122,0.1)]">
+              <Headset size={20} />
+            </div>
+            <div>
+              <h2 className="text-white font-light italic text-xl tracking-tight">L'ÉLITE Concierge</h2>
+              <p className="text-[9px] text-green-500 uppercase font-bold tracking-widest">Active Support Session</p>
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT COLUMN: RE-ARCHITECTED CHAT INTERFACE */}
-        <div className="lg:col-span-2 flex flex-col bg-[#1a1a1a] border border-white/5 relative overflow-hidden shadow-2xl">
+        {/* Message Container */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#121212]/40">
           
-          {/* A. FIXED HEADER (flex-shrink-0) */}
-          <div className="flex-shrink-0 p-5 border-b border-white/5 bg-[#1a1a1a] z-10 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-[#D4AF7A]/10 flex items-center justify-center text-[#D4AF7A]">
-                  <Headset size={20} />
-                </div>
-                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#1a1a1a] rounded-full" />
-              </div>
-              <div>
-                <h3 className="text-white text-sm font-medium">L'ÉLITE Support</h3>
-                <p className="text-[9px] text-green-500 uppercase tracking-[0.2em] font-bold">Always Online</p>
-              </div>
+          {/* 2. PERMANENT PROFESSIONAL GREETING */}
+          <div className="flex justify-start">
+            <div className="max-w-[85%] p-6 bg-white/5 border border-white/10 rounded-tr-2xl rounded-br-2xl text-white/90 shadow-lg">
+              <p className="text-sm font-light leading-relaxed">
+                Hello! 👋 <span className="text-[#D4AF7A] font-medium">Welcome to our salon.</span><br/><br/>
+                Thank you for visiting us. How can we help you today? Feel free to send us any questions, concerns, or feedback, and our team will be happy to assist you.
+              </p>
+              <p className="text-[8px] mt-4 opacity-30 uppercase font-black tracking-tighter text-[#D4AF7A]">System Greeting • Connected</p>
             </div>
           </div>
 
-          {/* B. SCROLLABLE MESSAGE LIST (flex-1) */}
-          <div 
-            ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#121212]/30"
-          >
-            {messages.map((m) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                key={m.id} 
-                className={cn("flex w-full", m.sender === 'user' ? "justify-end" : "justify-start")}
-              >
-                <div className={cn(
-                  "max-w-[85%] md:max-w-[70%] p-4 shadow-xl",
-                  m.sender === 'user' 
-                    ? "bg-[#D4AF7A] text-[#121212] rounded-l-2xl rounded-tr-2xl" 
-                    : "bg-white/5 text-white/90 rounded-r-2xl rounded-tl-2xl border border-white/5"
-                )}>
-                  <p className="text-sm font-light leading-relaxed">{m.text}</p>
-                  <p className="text-[8px] uppercase mt-2 opacity-50 text-right font-bold tracking-tighter">
-                    {m.timestamp}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-white/5 p-4 rounded-2xl flex gap-1.5">
-                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1 h-1 bg-[#D4AF7A] rounded-full" />
-                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1 h-1 bg-[#D4AF7A] rounded-full" />
-                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1 h-1 bg-[#D4AF7A] rounded-full" />
-                </div>
+          {myChat.map((m) => (
+            <div key={m.id} className={cn("flex w-full", m.senderEmail === user.email ? "justify-end" : "justify-start animate-in fade-in slide-in-from-left-2")}>
+              <div className={cn("max-w-[75%] p-4 text-sm shadow-2xl transition-all", 
+                m.senderEmail === user.email 
+                  ? "bg-[#D4AF7A] text-[#121212] rounded-tl-2xl rounded-bl-2xl rounded-tr-sm font-medium" 
+                  : "bg-white/5 text-white/80 border border-white/10 rounded-tr-2xl rounded-br-2xl rounded-tl-sm font-light")}>
+                <p className="leading-relaxed">{m.text}</p>
+                <p className="text-[8px] mt-2 opacity-40 font-bold uppercase tracking-tighter">
+                  {m.timestamp === 'System' ? 'Instant Confirmation' : m.timestamp}
+                </p>
               </div>
-            )}
-
-            {/* This is the invisible anchor that the auto-scroll targets */}
-            <div ref={messagesEndRef} className="h-2" />
-          </div>
-
-          {/* C. FIXED FOOTER INPUT (flex-shrink-0) */}
-          <div className="flex-shrink-0 p-4 bg-[#1a1a1a] border-t border-white/5">
-            <form 
-              onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-              className="flex gap-3 bg-white/5 p-2 border border-white/10 focus-within:border-[#D4AF7A]/50 transition-all"
-            >
-              <input 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 bg-transparent border-none py-3 px-4 text-sm text-white placeholder:text-white/20 outline-none"
-              />
-              <button 
-                type="submit"
-                disabled={!input.trim()}
-                className="bg-[#D4AF7A] text-[#121212] px-5 flex items-center justify-center transition-all hover:bg-white disabled:opacity-30 disabled:grayscale"
-              >
-                <Send size={18} />
-              </button>
-            </form>
-          </div>
-
+            </div>
+          ))}
+          <div ref={endRef} />
         </div>
+
+        {/* Input Bar */}
+        <form onSubmit={(e) => { e.preventDefault(); if(input.trim()){ sendMessage(input, 'admin'); setInput(""); } }} className="p-5 bg-[#121212] border-t border-white/5 flex gap-4">
+          <input 
+            value={input} 
+            onChange={e => setInput(e.target.value)} 
+            placeholder="Compose message to concierge..." 
+            className="flex-1 bg-white/5 border border-white/10 p-4 text-sm text-white outline-none focus:border-[#D4AF7A] transition-all" 
+          />
+          <button className="bg-[#D4AF7A] text-black px-8 hover:bg-white transition-all duration-500 flex items-center justify-center group active:scale-95 shadow-lg">
+            <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+          </button>
+        </form>
       </div>
     </main>
   );
