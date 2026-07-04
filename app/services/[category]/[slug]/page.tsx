@@ -5,7 +5,7 @@ import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import ServiceGallery from "@/components/services/ServiceGallery";
-import BookingModal from "../../../../components/services/booking/BookingModal";
+import BookingModal from "@/components/services/booking/BookingModal";
 import { CheckCircle2, Clock, Tag, Calendar, ArrowLeft, Star, Heart, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getFavorites, toggleFavoriteId } from "@/lib/favorites";
@@ -33,18 +33,18 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
     }
   }, [service]);
 
+  // --- SECURITY GUARD FOR DETAIL PAGE BOOKING ---
+  const handleBookingClick = () => {
+    const user = getActiveUser();
+    if (!user || !user.email) {
+      router.push('/sign-in'); // Redirect guest
+    } else {
+      setIsBookingOpen(true); // Open for member
+    }
+  };
+
   if (!isMounted || !servicesLoaded) return <div className="min-h-screen bg-[#121212]" />;
   if (!service) notFound();
-
-  const handleToggleFavorite = () => {
-    const user = getActiveUser();
-    if (!user) {
-      router.push('/sign-in');
-      return;
-    }
-    toggleFavoriteId(service.id);
-    setIsFavorited(!isFavorited);
-  };
 
   return (
     <main className="min-h-screen bg-[#121212] text-white pt-32 pb-20 px-4">
@@ -54,14 +54,12 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
             <ArrowLeft size={16} /> Back to {categoryData?.title}
           </Link>
           <div className="flex gap-4">
-            <button onClick={handleToggleFavorite}
-              className={cn("p-3 rounded-full border transition-all duration-500", isFavorited ? "bg-[#D4AF7A] border-[#D4AF7A] text-black shadow-lg shadow-[#D4AF7A]/20" : "bg-white/5 border-white/10")}
+            <button onClick={() => { toggleFavoriteId(service.id); setIsFavorited(!isFavorited); }}
+              className={cn("p-3 rounded-full border transition-all duration-500", isFavorited ? "bg-[#D4AF7A] border-[#D4AF7A] text-black shadow-lg" : "bg-white/5 border-white/10")}
             >
               <Heart size={20} fill={isFavorited ? "currentColor" : "none"} />
             </button>
-            <button className="p-3 rounded-full bg-white/5 border border-white/10 text-white/50 hover:text-white transition-all">
-                <Share2 size={20} />
-            </button>
+            <button className="p-3 rounded-full bg-white/5 border border-white/10 text-white/50 hover:text-white transition-all"><Share2 size={20} /></button>
           </div>
         </div>
 
@@ -76,14 +74,13 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="#D4AF7A" className="text-[#D4AF7A]" />)}
                 </div>
-                <span className="text-white/40 text-[10px] uppercase tracking-widest ml-2">Verified Stylist Result</span>
+                <span className="text-white/40 text-[10px] uppercase tracking-widest ml-2">Verified Result</span>
               </div>
-              <h2 className="text-[#D4AF7A] uppercase tracking-[0.4em] text-xs mb-4 font-semibold">{categoryData?.title}</h2>
               <h1 className="text-5xl md:text-7xl font-light italic tracking-tight mb-6">{service.name}</h1>
               <p className="text-white/60 text-lg leading-relaxed font-light">{service.description}</p>
             </div>
 
-            <div className="flex flex-wrap gap-12 py-8 border-y border-white/10">
+            <div className="flex flex-wrap gap-12 py-8 border-y border-white/10 text-white">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full border border-[#D4AF7A]/30 flex items-center justify-center text-[#D4AF7A]"><Tag size={20} /></div>
                 <div>
@@ -111,13 +108,16 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
               </div>
             </div>
 
-            <button onClick={() => setIsBookingOpen(true)} className="w-full bg-[#D4AF7A] text-black py-5 font-bold uppercase tracking-[0.2em] hover:bg-white transition-all shadow-xl">
+            <button 
+              onClick={handleBookingClick}
+              className="w-full bg-[#D4AF7A] text-black py-5 font-bold uppercase tracking-[0.2em] hover:bg-white transition-all shadow-xl"
+            >
               Reserve Appointment
             </button>
           </motion.div>
         </div>
       </div>
-      <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} serviceName={service.name} />
+      <BookingModal isOpen={isBookingOpen} onClose={() => setIsBookingOpen(false)} serviceName={service.name} price={service.price} />
     </main>
   );
 }
