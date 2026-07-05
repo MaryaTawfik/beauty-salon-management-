@@ -18,8 +18,9 @@ interface ChatContextType {
   sendMessage: (text: string, receiverEmail: string) => void;
   markAsUserRead: (userEmail: string) => void; 
   markAsAdminRead: (userEmail: string) => void; 
-  userUnreadCount: number; // Changed from boolean to number
-  unreadThreads: number;   // For Admin
+  clearChat: (userEmail: string) => void; // FIX: Added clearChat here
+  userUnreadCount: number; 
+  unreadThreads: number;   
   isMounted: boolean;
 }
 
@@ -30,7 +31,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
   const [sessionUser, setSessionUser] = useState<any>(null);
 
-  // Function to pull latest data from storage
   const syncChat = () => {
     const saved = localStorage.getItem("salon_global_inbox");
     if (saved) setAllMessages(JSON.parse(saved));
@@ -40,8 +40,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     syncChat();
     setIsMounted(true);
-
-    // Listen for changes from other tabs or same-tab dispatches
     window.addEventListener('storage', syncChat);
     window.addEventListener('chat-updated', syncChat);
     return () => {
@@ -50,13 +48,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Calculate unread count for the User
   const userUnreadCount = useMemo(() => {
     if (!sessionUser) return 0;
     return allMessages.filter(m => m.receiverEmail === sessionUser.email && !m.isUserRead).length;
   }, [allMessages, sessionUser]);
 
-  // Calculate unread threads for the Admin
   const unreadThreads = useMemo(() => {
     return Array.from(new Set(
       allMessages.filter(m => m.senderEmail !== 'admin' && !m.isAdminRead).map(m => m.senderEmail)
@@ -84,7 +80,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     let inbox = saved ? JSON.parse(saved) : [];
     inbox.push(newMessage);
 
-    // Auto-Reply Logic
     if (!isAdmin && receiverEmail === 'admin') {
       inbox.push({
         id: (Date.now() + 1).toString(),
@@ -93,12 +88,22 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         text: "Thank you for contacting us! We have received your message successfully.",
         timestamp: "System",
         isAdminRead: true, 
-        isUserRead: false, // Triggers User Notification
+        isUserRead: false,
       });
     }
 
     localStorage.setItem("salon_global_inbox", JSON.stringify(inbox));
-    window.dispatchEvent(new Event('chat-updated')); // Notify Navbar
+    window.dispatchEvent(new Event('chat-updated'));
+  };
+
+  // FIX: Logic to wipe chat for a specific user
+  const clearChat = (userEmail: string) => {
+    const saved = localStorage.getItem("salon_global_inbox");
+    if (!saved) return;
+    const inbox: ChatMessage[] = JSON.parse(saved);
+    const updated = inbox.filter(m => m.senderEmail !== userEmail && m.receiverEmail !== userEmail);
+    localStorage.setItem("salon_global_inbox", JSON.stringify(updated));
+    window.dispatchEvent(new Event('chat-updated'));
   };
 
   const markAsUserRead = (email: string) => {
@@ -120,7 +125,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ChatContext.Provider value={{ allMessages, sendMessage, markAsUserRead, markAsAdminRead, userUnreadCount, unreadThreads, isMounted }}>
+    <ChatContext.Provider value={{ allMessages, sendMessage, markAsUserRead, markAsAdminRead, clearChat, userUnreadCount, unreadThreads, isMounted }}>
       {children}
     </ChatContext.Provider>
   );
