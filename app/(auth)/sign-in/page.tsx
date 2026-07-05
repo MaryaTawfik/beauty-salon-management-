@@ -30,7 +30,7 @@ export default function SignInPage() {
       if (result.user.role === 'admin') {
         router.push("/admin");
       } else {
-        router.push("/profile");
+        router.push("/");
       }
     } else {
       // 5. ERROR: Show a luxury-styled error message

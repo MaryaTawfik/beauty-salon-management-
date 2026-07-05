@@ -112,6 +112,7 @@ export default function Navbar() {
     { name: 'Services', href: '/#services' },
     { name: 'Experience', href: '/#experience' },
     { name: 'Products', href: '/#products' },
+    // { name: 'Testimonials', href: '/#testimonials' },
   ];
 
   return (

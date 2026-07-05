@@ -25,7 +25,7 @@ export default function Experience() {
             className="relative order-1 lg:order-2"
           >
             {/* Outer Frame */}
-            <div className="absolute -top-4 -left-4 lg:-top-6 lg:-left-6 w-full h-full border border-[#D4AF7A]/20 z-0" />
+            <div className="absolute -top-4 -left-4 lg:-top-6 lg:-left-6 w-full h-full  z-0" />
 
             {/* Glow */}
             <div className="absolute inset-0 bg-[#D4AF7A]/10 blur-3xl scale-90 z-0" />
@@ -44,8 +44,8 @@ export default function Experience() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
               {/* Corner Decorations */}
-              <div className="absolute top-6 left-6 w-16 h-16 border-l border-t border-[#D4AF7A]/50" />
-              <div className="absolute bottom-6 right-6 w-16 h-16 border-r border-b border-[#D4AF7A]/50" />
+              <div className="absolute top-6 left-6 w-16 h-16  " />
+              <div className="absolute bottom-6 right-6 w-16 h-16 " />
 
               {/* Floating Card */}
               <div className="absolute bottom-6 left-6 lg:bottom-8 lg:left-8 backdrop-blur-md bg-black/60 border border-[#D4AF7A]/20 px-5 py-4">

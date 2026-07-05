@@ -1,50 +1,54 @@
 "use client";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Package, CheckCircle2, AlertCircle, Upload, Truck, ShoppingBag } from 'lucide-react';
+import { getActiveUser } from '@/lib/auth-utils';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
-import React from 'react';
-import Image from 'next/image';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+export default function UserOrders() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const user = getActiveUser();
 
-const orders = [
-  {
-    id: 'ORD-9921',
-    product: 'Luxury Argan Hair Oil',
-    image: '/images/products/oil.jpg', // Ensure this image exists or use a placeholder
-    date: 'Aug 12, 2023',
-    price: '1,200 ETB',
-    status: 'Delivered'
-  }
-];
+  useEffect(() => {
+    const fetchOrders = () => {
+      const data = localStorage.getItem("salon_orders");
+      if (data && user) {
+        setOrders(JSON.parse(data).filter((o: any) => o.userId === user.email));
+      }
+    };
+    fetchOrders();
+    window.addEventListener('order-updated', fetchOrders);
+    return () => window.removeEventListener('order-updated', fetchOrders);
+  }, []);
 
-export default function OrdersPage() {
+  const getStatusColor = (s: string) => {
+    if(s === 'Confirmed') return 'text-green-500 bg-green-500/10 border-green-500/20';
+    if(s === 'Rejected') return 'text-red-500 bg-red-500/10 border-red-500/20';
+    if(s === 'Verifying') return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
+    return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+  };
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-light italic text-[#D4AF7A]">Orders & Purchases</h1>
-        <p className="text-white/40 text-[10px] uppercase tracking-[0.2em] mt-2">Track your luxury beauty collection</p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        {orders.map((order) => (
-          <div key={order.id} className="bg-white/[0.02] border border-white/5 p-4 flex flex-col md:flex-row items-center gap-6">
-            <div className="relative w-24 h-24 bg-zinc-900 overflow-hidden">
-               {/* Replace with actual image or Lucide icon placeholder */}
-               <div className="absolute inset-0 flex items-center justify-center text-white/10">
-                 <ShoppingBag size={40} />
-               </div>
-            </div>
-            
-            <div className="flex-1 space-y-1 text-center md:text-left">
-              <p className="text-[10px] text-[#D4AF7A] uppercase tracking-widest">{order.id}</p>
-              <h3 className="text-lg text-white font-light">{order.product}</h3>
-              <p className="text-white/40 text-xs">Purchased on {order.date}</p>
+    <div className="space-y-10 pb-20">
+      <h1 className="text-3xl font-light italic text-[#D4AF7A]">Ritual History</h1>
+      <div className="space-y-6">
+        {orders.map(order => (
+          <div key={order.id} className="bg-[#121212] border border-white/5 p-6 space-y-6">
+            <div className="flex justify-between items-start">
+              <div><p className="text-[10px] font-mono text-white/20">{order.id}</p><h3 className="text-white text-lg font-light italic">{order.totalAmount} ETB</h3></div>
+              <span className={cn("px-3 py-1 text-[9px] font-black uppercase border rounded-full", getStatusColor(order.status))}>{order.status}</span>
             </div>
 
-            <div className="text-right flex flex-col items-center md:items-end gap-2">
-              <span className="text-xl font-light text-white">{order.price}</span>
-              <button className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF7A] flex items-center gap-2 hover:text-white transition-colors">
-                Order Details <ArrowRight size={14} />
-              </button>
-            </div>
+            {order.status === 'Rejected' && (
+              <div className="bg-red-500/5 border border-red-500/20 p-5 flex items-start gap-4">
+                <AlertCircle className="text-red-500 shrink-0" size={18} />
+                <div className="space-y-3">
+                  <p className="text-xs text-white/80"><span className="font-bold text-red-400">Rejection Reason:</span> {order.rejectionReason}</p>
+                  <Link href={`/payment/${order.id}`} className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-[#D4AF7A] transition-all"><Upload size={14} /> Upload New Receipt</Link>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
