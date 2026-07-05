@@ -1,12 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Product, CartItem } from '@/app/types/product'; 
-import { getActiveUser } from '@/lib/auth-utils'; 
+import { Product, CartItem } from '@/app/types/product';
 
-// 1. THIS IS THE LINE YOU WERE LIKELY MISSING
-// This creates the "TV" (The Context object)
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product) => void;
@@ -23,51 +19,32 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
 
-  const getStorageKey = () => {
-    const user = getActiveUser();
-    return (user && user.email) ? `cart_session_${user.email}` : null;
-  };
-
+  // 1. Initial Load: Sync with LocalStorage
   useEffect(() => {
-    const user = getActiveUser();
-    
-    // Cleanup old ghost keys
-    localStorage.removeItem("salon_cart"); 
-    localStorage.removeItem("cart");
-
-    const key = getStorageKey();
-    if (key) {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        try { setCart(JSON.parse(saved)); } catch (e) { setCart([]); }
+    const savedCart = localStorage.getItem('salon_cart');
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Failed to parse cart data");
       }
-    } else {
-      setCart([]);
     }
     setIsMounted(true);
   }, []);
 
+  // 2. Persistence: Save to LocalStorage whenever cart changes
   useEffect(() => {
-    const key = getStorageKey();
-    if (isMounted && key) {
-      localStorage.setItem(key, JSON.stringify(cart));
+    if (isMounted) {
+      localStorage.setItem('salon_cart', JSON.stringify(cart));
     }
   }, [cart, isMounted]);
 
   const addToCart = (product: Product) => {
-    const user = getActiveUser();
-
-    if (!user || !user.email) {
-      router.push('/sign-in');
-      return; 
-    }
-
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => 
+    setCart((prev) => {
+      const existingItem = prev.find((item) => item.id === product.id);
+      if (existingItem) {
+        return prev.map((item) =>
           item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
@@ -76,29 +53,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+    setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const newQty = Math.max(0, item.quantity + delta);
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      }).filter(item => item.quantity > 0) // Remove if quantity becomes 0
+    );
   };
 
   const clearCart = () => {
-    const key = getStorageKey();
-    if (key) localStorage.removeItem(key);
     setCart([]);
+    localStorage.removeItem('salon_cart');
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // 2. MAKE SURE THIS MATCHES THE VARIABLE NAME CREATED AT THE TOP
   return (
     <CartContext.Provider value={{ 
       cart, addToCart, removeFromCart, updateQuantity, 
@@ -109,9 +86,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// 3. THIS HOOK DEPENDS ON THE CONTEXT CREATED AT THE TOP
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) throw new Error('useCart must be used within CartProvider');
+  if (!context) throw new Error("useCart must be used within a CartProvider");
   return context;
 };
