@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Playfair_Display } from 'next/font/google';
 
+
 // Contexts & Utils
 import { useCart } from '@/app/context/CartContext';
 import { useChat } from '@/app/context/ChatContext'; 
@@ -111,6 +112,7 @@ export default function Navbar() {
     { name: 'Home', href: '/' },
     { name: 'Services', href: '/#services' },
     { name: 'Experience', href: '/#experience' },
+    { name: 'Gallery', href: '/gallery' },
     { name: 'Products', href: '/#products' },
     // { name: 'Testimonials', href: '/#testimonials' },
   ];
@@ -133,7 +135,7 @@ export default function Navbar() {
               The<span className="text-[#D4AF7A]">Salon</span>
             </span>
           </Link>
-
+          
           {/* DESKTOP LINKS */}
           <div className="hidden lg:flex items-center gap-10">
             {navLinks.map((link) => (
