@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ImagePlus, ExternalLink, Upload } from "lucide-react";
 
 type GalleryItem = {
   id: string;
@@ -17,10 +18,7 @@ const categories: GalleryItem["category"][] = [
   "Makeup",
   "Henna Design",
   "Bridal Service",
-]; 
-import UserGallery from "@/app/components/UserGallery";
-
-
+];
 
 export default function AdminGalleryPage() {
   const [title, setTitle] = useState("");
@@ -37,6 +35,8 @@ export default function AdminGalleryPage() {
       setMessage("Choose an image smaller than 1.5 MB.");
       return;
     }
+
+    setMessage("");
 
     const reader = new FileReader();
 
@@ -56,120 +56,162 @@ export default function AdminGalleryPage() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!title || !beforeImage || !afterImage) {
+    if (!title.trim() || !beforeImage || !afterImage) {
       setMessage("Add a title, before image, and after image.");
       return;
     }
 
-    const savedItems = JSON.parse(
-      localStorage.getItem("galleryItems") || "[]"
-    ) as GalleryItem[];
+    try {
+      const savedItems = JSON.parse(
+        localStorage.getItem("galleryItems") || "[]"
+      ) as GalleryItem[];
 
-    const newItem: GalleryItem = {
-      id: crypto.randomUUID(),
-      title,
-      category,
-      beforeImage,
-      afterImage,
-      createdAt: new Date().toISOString(),
-    };
+      const newItem: GalleryItem = {
+        id: crypto.randomUUID(),
+        title: title.trim(),
+        category,
+        beforeImage,
+        afterImage,
+        createdAt: new Date().toISOString(),
+      };
 
-    localStorage.setItem(
-      "galleryItems",
-      JSON.stringify([newItem, ...savedItems])
-    );
+      localStorage.setItem(
+        "galleryItems",
+        JSON.stringify([newItem, ...savedItems])
+      );
 
-    setTitle("");
-    setBeforeImage("");
-    setAfterImage("");
-    setMessage("Saved successfully. Open the public gallery to see it.");
+      setTitle("");
+      setCategory("Hairstyle");
+      setBeforeImage("");
+      setAfterImage("");
+      setMessage("Gallery result saved successfully.");
+    } catch (error) {
+      console.error("Could not save gallery item:", error);
+      setMessage("Could not save images. Try smaller image files.");
+    }
   }
 
   return (
-    <main className="min-h-screen bg-[#121212] px-6 py-28 text-white">
-      <div className="mx-auto max-w-2xl">
+    <div className="space-y-10 pb-20">
+      <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
+        <div>
+          <div className="flex items-center gap-3">
+            <ImagePlus className="text-[#D4AF7A]" size={22} />
+            <h1 className="text-3xl font-light italic tracking-tight text-white">
+              Gallery Upload
+            </h1>
+          </div>
+
+          <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-white/40">
+            Before & After Transformations
+          </p>
+        </div>
+
         <Link
           href="/gallery"
-          className="text-xs uppercase tracking-[0.2em] text-[#D4AF7A]"
+          target="_blank"
+          className="flex items-center gap-2 border border-[#D4AF7A]/30 px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-[#D4AF7A] transition-all hover:bg-[#D4AF7A] hover:text-black"
         >
-          View public gallery
+          <ExternalLink size={15} />
+          View Public Gallery
         </Link>
+      </div>
 
-        <p className="mt-8 text-xs uppercase tracking-[0.4em] text-[#D4AF7A]">
-          Admin gallery manager
-        </p>
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-3xl space-y-7 border border-white/5 bg-[#121212] p-6 md:p-8"
+      >
+        <div>
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+            Transformation Title
+          </label>
 
-        <h1 className="mt-4 text-4xl font-light">Add Customer Result</h1>
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Example: Bridal makeup transformation"
+            className="w-full border border-white/10 bg-[#0F0F0E] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-[#D4AF7A]"
+          />
+        </div>
 
-        <p className="mt-4 text-white/60">
-          Upload before and after photos after a customer service is completed.
-        </p>
+        <div>
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+            Service Category
+          </label>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-10 space-y-6 border border-white/10 bg-[#1a1a1a] p-6"
-        >
+          <select
+            value={category}
+            onChange={(event) =>
+              setCategory(event.target.value as GalleryItem["category"])
+            }
+            className="w-full border border-white/10 bg-[#0F0F0E] px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF7A]"
+          >
+            {categories.map((item) => (
+              <option key={item} value={item} className="bg-[#121212]">
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm">Transformation title</label>
-            <input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Example: Bridal makeup transformation"
-              className="w-full border border-white/15 bg-[#121212] px-4 py-3 outline-none focus:border-[#D4AF7A]"
-            />
-          </div>
+            <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+              Before Image
+            </label>
 
-          <div>
-            <label className="mb-2 block text-sm">Service category</label>
-            <select
-              value={category}
-              onChange={(event) =>
-                setCategory(event.target.value as GalleryItem["category"])
-              }
-              className="w-full border border-white/15 bg-[#121212] px-4 py-3 outline-none focus:border-[#D4AF7A]"
-            >
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm">Before image</label>
             <input
               type="file"
               accept="image/*"
               onChange={(event) =>
                 readImage(event.target.files?.[0], "before")
               }
-              className="w-full text-sm text-white/70"
+              className="w-full border border-dashed border-white/15 bg-[#0F0F0E] p-3 text-xs text-white/60 file:mr-4 file:border-0 file:bg-[#D4AF7A] file:px-3 file:py-2 file:text-[10px] file:font-bold file:uppercase file:tracking-wider file:text-black"
             />
+
+            {beforeImage && (
+              <p className="mt-2 text-[10px] uppercase tracking-wider text-[#D4AF7A]">
+                Before image selected
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="mb-2 block text-sm">After image</label>
+            <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+              After Image
+            </label>
+
             <input
               type="file"
               accept="image/*"
               onChange={(event) =>
                 readImage(event.target.files?.[0], "after")
               }
-              className="w-full text-sm text-white/70"
+              className="w-full border border-dashed border-white/15 bg-[#0F0F0E] p-3 text-xs text-white/60 file:mr-4 file:border-0 file:bg-[#D4AF7A] file:px-3 file:py-2 file:text-[10px] file:font-bold file:uppercase file:tracking-wider file:text-black"
             />
+
+            {afterImage && (
+              <p className="mt-2 text-[10px] uppercase tracking-wider text-[#D4AF7A]">
+                After image selected
+              </p>
+            )}
           </div>
+        </div>
 
-          <button
-            type="submit"
-            className="w-full bg-[#D4AF7A] px-5 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#121212]"
-          >
-            Save gallery result
-          </button>
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 bg-[#D4AF7A] px-5 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
+        >
+          <Upload size={16} />
+          Save Gallery Result
+        </button>
 
-          {message && <p className="text-sm text-[#D4AF7A]">{message}</p>}
-        </form>
-      </div>
-    </main>
+        {message && (
+          <p className="border border-[#D4AF7A]/20 bg-[#D4AF7A]/5 p-3 text-center text-xs text-[#D4AF7A]">
+            {message}
+          </p>
+        )}
+      </form>
+    </div>
   );
 }

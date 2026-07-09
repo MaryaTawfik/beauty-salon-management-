@@ -1,111 +1,152 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, Scissors, ShoppingBag, 
-  Users, MessageSquare, Menu, X, LogOut, 
-  ExternalLink, CreditCard, ClipboardList // 1. Added CreditCard and ClipboardList
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useChat } from '@/app/context/ChatContext';
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Scissors,
+  ShoppingBag,
+  Users,
+  MessageSquare,
+  Menu,
+  X,
+  LogOut,
+  ExternalLink,
+  CreditCard,
+  ClipboardList,
+  Images,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { useChat } from "@/app/context/ChatContext";
 
-// 2. Updated Admin Navigation Array
 const adminLinks = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-  { name: 'Ritual Manager', icon: Scissors, href: '/admin/services' },
-  { name: 'Boutique Inventory', icon: ShoppingBag, href: '/admin/products' },
-  { name: 'Schedule Manager', icon: Users, href: '/admin/appointments' },
-  { 
-    name: 'Payment Requests', // NEW: Link to verify receipts
-    icon: CreditCard, 
-    href: '/admin/payments' 
+  { name: "Dashboard", icon: LayoutDashboard, href: "/admin" },
+  { name: "Ritual Manager", icon: Scissors, href: "/admin/services" },
+  { name: "Gallery Upload", icon: Images, href: "/admin/gallery" },
+  { name: "Boutique Inventory", icon: ShoppingBag, href: "/admin/products" },
+  { name: "Schedule Manager", icon: Users, href: "/admin/appointments" },
+  {
+    name: "Payment Requests",
+    icon: CreditCard,
+    href: "/admin/payments",
   },
-  { 
-    name: 'Order Tracking', // NEW: Link to update delivery status
-    icon: ClipboardList, 
-    href: '/admin/orders' 
+  {
+    name: "Order Tracking",
+    icon: ClipboardList,
+    href: "/admin/orders",
   },
-  { name: 'Live Support', icon: MessageSquare, href: '/admin/support' },
+  { name: "Live Support", icon: MessageSquare, href: "/admin/support" },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { unreadThreads } = useChat();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col md:flex-row">
-      
-      {/* MOBILE ADMIN HEADER */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[#121212] border-b border-white/5 sticky top-0 z-[100]">
-        <h1 className="text-[#D4AF7A] text-sm font-bold uppercase tracking-widest text-center">Admin Panel</h1>
-        <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-white">
+    <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-white md:flex-row">
+      {/* Mobile admin header */}
+      <div className="sticky top-0 z-[100] flex items-center justify-between border-b border-white/5 bg-[#121212] p-4 md:hidden">
+        <h1 className="text-center text-sm font-bold uppercase tracking-widest text-[#D4AF7A]">
+          Admin Panel
+        </h1>
+
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 text-white"
+          aria-label="Open admin menu"
+        >
           <Menu size={24} />
         </button>
       </div>
 
-      {/* ADMIN SIDEBAR */}
+      {/* Admin sidebar */}
       <AnimatePresence>
         {(isSidebarOpen || true) && (
-          <motion.aside 
+          <motion.aside
             initial={{ x: -256 }}
             animate={{ x: 0 }}
+            exit={{ x: -256 }}
             className={cn(
-              "fixed md:sticky top-0 left-0 h-screen w-64 bg-[#121212] border-r border-white/5 z-[150] flex flex-col transition-transform",
-              !isSidebarOpen && "hidden md:flex" 
+              "fixed left-0 top-0 z-[150] flex h-screen w-64 flex-col border-r border-white/5 bg-[#121212] transition-transform md:sticky md:flex",
+              !isSidebarOpen && "hidden md:flex"
             )}
           >
-            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden absolute top-6 right-6 text-white/40"><X size={20} /></button>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="absolute right-6 top-6 text-white/40 md:hidden"
+              aria-label="Close admin menu"
+            >
+              <X size={20} />
+            </button>
 
-            <div className="p-8 border-b border-white/5">
-              <h1 className="text-[#D4AF7A] text-xl font-bold uppercase tracking-[0.2em]">L'Élite <span className="text-white font-light">Admin</span></h1>
+            <div className="border-b border-white/5 p-8">
+              <h1 className="text-xl font-bold uppercase tracking-[0.2em] text-[#D4AF7A]">
+                L&apos;Élite{" "}
+                <span className="font-light text-white">Admin</span>
+              </h1>
             </div>
 
-            <nav className="flex-1 p-4 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
-              {adminLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center justify-between px-4 py-3 text-[10px] uppercase tracking-[0.2em] transition-all group",
-                    pathname === link.href 
-                      ? "bg-[#D4AF7A] text-[#121212] font-bold shadow-[0_0_20px_rgba(212,175,122,0.2)]" 
-                      : "text-white/40 hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <link.icon size={16} strokeWidth={pathname === link.href ? 2.5 : 1.5} />
-                    {link.name}
-                  </div>
+            <nav className="custom-scrollbar mt-4 flex-1 space-y-1 overflow-y-auto p-4">
+              {adminLinks.map((link) => {
+                const isActive = pathname === link.href;
 
-                  {/* CHAT BADGE */}
-                  {link.name === 'Live Support' && unreadThreads > 0 && (
-                    <span className="flex h-4 w-4 rounded-full bg-red-600 text-[8px] text-white items-center justify-center font-black animate-pulse">
-                      {unreadThreads}
-                    </span>
-                  )}
-                </Link>
-              ))}
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={cn(
+                      "group flex items-center justify-between px-4 py-3 text-[10px] uppercase tracking-[0.2em] transition-all",
+                      isActive
+                        ? "bg-[#D4AF7A] font-bold text-[#121212] shadow-[0_0_20px_rgba(212,175,122,0.2)]"
+                        : "text-white/40 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <link.icon
+                        size={16}
+                        strokeWidth={isActive ? 2.5 : 1.5}
+                      />
+                      {link.name}
+                    </div>
+
+                    {link.name === "Live Support" && unreadThreads > 0 && (
+                      <span className="flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-red-600 text-[8px] font-black text-white">
+                        {unreadThreads}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </nav>
 
-            <div className="p-6 border-t border-white/5 space-y-4 bg-black/20">
-              <Link href="/" className="flex items-center gap-3 text-white/30 hover:text-[#D4AF7A] text-[9px] uppercase tracking-widest transition-colors">
-                <ExternalLink size={14} /> Back to Live Site
+            <div className="space-y-4 border-t border-white/5 bg-black/20 p-6">
+              <Link
+                href="/"
+                className="flex items-center gap-3 text-[9px] uppercase tracking-widest text-white/30 transition-colors hover:text-[#D4AF7A]"
+              >
+                <ExternalLink size={14} />
+                Back to Live Site
               </Link>
-              <button className="flex items-center gap-3 text-red-400/50 hover:text-red-400 text-[9px] uppercase tracking-widest w-full">
-                <LogOut size={14} /> System Logout
+
+              <button className="flex w-full items-center gap-3 text-[9px] uppercase tracking-widest text-red-400/50 hover:text-red-400">
+                <LogOut size={14} />
+                System Logout
               </button>
             </div>
           </motion.aside>
         )}
       </AnimatePresence>
 
-      {/* Main Admin Content */}
-      <main className="flex-1 p-6 md:p-12 overflow-x-hidden">
+      {/* Main admin content */}
+      <main className="flex-1 overflow-x-hidden p-6 md:p-12">
         {children}
       </main>
     </div>
