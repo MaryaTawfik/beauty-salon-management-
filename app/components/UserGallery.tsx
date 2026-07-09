@@ -22,7 +22,7 @@ export default function UserGallery() {
       : galleryData.filter((item) => item.category === active);
 
   return (
-    <section className="min-h-screen bg-[#0F0F0E] px-6 py-20 text-white md:px-10">
+    <section className="bg-[#0F0F0E] px-6 py-20 text-white md:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Heading */}
         <div className="mb-14 text-center">

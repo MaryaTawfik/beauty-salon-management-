@@ -13,7 +13,7 @@ import ProductsAndCheckout from "./components/ProductsAndCheckout";
 import ProductSection from "@/app/components/products/ProductSection";
 // Data
 import { TESTIMONIALS } from "./data/testimonials";
-
+import UserGallery from "./components/UserGallery";
 const playfair = Playfair_Display({ subsets: ['latin'], style: ['normal', 'italic'] });
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,7 +29,9 @@ export default function Home() {
       <section id="services" className="py-20 bg-[#121212] relative z-10">
         <ServiceGrid />
       </section>
-
+      <section id="gallery">
+       <UserGallery />
+        </section>
       {/* 3. Stylists / Experience Section */}
       <section id="experience">
         <StylistGrid />

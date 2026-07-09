@@ -26,15 +26,11 @@ export default function GalleryPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
-    try {
-      const savedItems = localStorage.getItem("galleryItems");
+    const savedItems = JSON.parse(
+      localStorage.getItem("galleryItems") || "[]"
+    ) as GalleryItem[];
 
-      if (savedItems) {
-        setItems(JSON.parse(savedItems));
-      }
-    } catch (error) {
-      console.error("Could not load gallery:", error);
-    }
+    setItems(savedItems);
   }, []);
 
   const filteredItems =
@@ -43,31 +39,29 @@ export default function GalleryPage() {
       : items.filter((item) => item.category === selectedCategory);
 
   return (
-    <main className="min-h-screen bg-[#0F0F0E] px-6 pb-24 pt-32 text-white md:px-10">
+    <main className="min-h-screen bg-[#121212] px-6 pb-24 pt-32 text-white md:px-10">
       <div className="mx-auto max-w-7xl">
-        <div className="border-b border-white/5 pb-10 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#D4AF7A]">
-            The Salon Journal
-          </p>
+        <p className="text-center text-xs uppercase tracking-[0.45em] text-[#D4AF7A]">
+          The Salon Journal
+        </p>
 
-          <h1 className="mt-5 text-4xl font-light italic tracking-tight md:text-6xl">
-            Before <span className="text-[#D4AF7A]">&</span> After
-          </h1>
+        <h1 className="mt-5 text-center text-4xl font-light md:text-6xl">
+          Before <span className="text-[#D4AF7A]">&</span> After
+        </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-center text-[10px] uppercase tracking-[0.25em] leading-6 text-white/40">
-            Explore real hairstyle, makeup, henna design, and bridal transformations
-          </p>
-        </div>
+        <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-7 text-white/60">
+          Explore real hairstyle, makeup, henna design, and bridal transformations.
+        </p>
 
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`border px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${
+              className={`border px-5 py-2.5 text-[10px] uppercase tracking-[0.2em] transition ${
                 selectedCategory === category
-                  ? "border-[#D4AF7A] bg-[#D4AF7A] text-black"
-                  : "border-white/10 bg-[#121212] text-white/50 hover:border-[#D4AF7A]/50 hover:bg-[#D4AF7A]/10 hover:text-[#D4AF7A]"
+                  ? "border-[#D4AF7A] bg-[#D4AF7A] text-[#121212]"
+                  : "border-white/15 text-white/70 hover:border-[#D4AF7A]"
               }`}
             >
               {category}
@@ -76,12 +70,9 @@ export default function GalleryPage() {
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="mt-14 border border-dashed border-white/10 bg-[#121212] p-12 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/50">
-              No transformations found in this category
-            </p>
-
-            <p className="mt-4 text-sm text-[#D4AF7A]/80">
+          <div className="mt-14 border border-dashed border-white/15 p-12 text-center">
+            <p className="text-white/60">No gallery results in this category yet.</p>
+            <p className="mt-3 text-sm text-[#D4AF7A]">
               Admin can add customer results from the Gallery Upload page.
             </p>
           </div>
@@ -90,63 +81,41 @@ export default function GalleryPage() {
             {filteredItems.map((item) => (
               <article
                 key={item.id}
-                className="group overflow-hidden border border-white/5 bg-[#121212] transition-all duration-300 hover:border-[#D4AF7A]/40"
+                className="overflow-hidden border border-white/10 bg-[#1a1a1a]"
               >
-                <div className="grid grid-cols-2 border-b border-white/5">
-                  <div className="border-r border-white/5">
-                    <p className="border-b border-white/5 py-3 text-center text-[9px] font-bold uppercase tracking-[0.25em] text-white/40">
+                <div className="grid grid-cols-2">
+                  <div className="relative h-44 sm:h-56">
+                    <Image
+                      src={item.beforeImage}
+                      alt={`${item.title} before`}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 350px"
+                      className="object-cover"
+                    />
+                    <span className="absolute left-3 top-3 bg-black/70 px-3 py-1 text-[9px] uppercase tracking-[0.2em]">
                       Before
-                    </p>
-
-                    <div className="relative h-44 overflow-hidden sm:h-56">
-                      <Image
-                        src={item.beforeImage}
-                        alt={`${item.title} before`}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 350px"
-                        className="object-cover opacity-70 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
-                      />
-                    </div>
+                    </span>
                   </div>
 
-                  <div>
-                    <p className="border-b border-white/5 py-3 text-center text-[9px] font-bold uppercase tracking-[0.25em] text-[#D4AF7A]">
+                  <div className="relative h-44 sm:h-56">
+                    <Image
+                      src={item.afterImage}
+                      alt={`${item.title} after`}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 350px"
+                      className="object-cover"
+                    />
+                    <span className="absolute left-3 top-3 bg-[#D4AF7A] px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-[#121212]">
                       After
-                    </p>
-
-                    <div className="relative h-44 overflow-hidden sm:h-56">
-                      <Image
-                        src={item.afterImage}
-                        alt={`${item.title} after`}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 350px"
-                        className="object-cover transition-all duration-500 group-hover:scale-105"
-                      />
-                    </div>
+                    </span>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF7A]">
+                <div className="p-5">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF7A]">
                     {item.category}
                   </p>
-
-                  <h2 className="mt-3 text-2xl font-light tracking-wide text-white">
-                    {item.title}
-                  </h2>
-
-                  <p className="mt-3 text-sm leading-relaxed text-white/40">
-                    Love this transformation? Reserve your appointment with our beauty team.
-                  </p>
-
-                  <Link
-                    href={`/booking?service=${encodeURIComponent(
-                      item.category
-                    )}&look=${encodeURIComponent(item.title)}`}
-                    className="mt-6 inline-block border border-[#D4AF7A]/50 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF7A] transition-all hover:bg-[#D4AF7A] hover:text-black"
-                  >
-                    Book This Look
-                  </Link>
+                  <h2 className="mt-2 text-2xl font-light">{item.title}</h2>
                 </div>
               </article>
             ))}
@@ -156,9 +125,9 @@ export default function GalleryPage() {
         <div className="mt-16 text-center">
           <Link
             href="/#services"
-            className="inline-block bg-[#D4AF7A] px-7 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-black transition-all hover:bg-white"
+            className="inline-block bg-[#D4AF7A] px-7 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-[#121212]"
           >
-            Explore Services
+            Explore services
           </Link>
         </div>
       </div>
