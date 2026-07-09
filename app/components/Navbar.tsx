@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, User, LogOut, Phone, 
   ChevronRight, ShoppingBag, Search, MessageSquare,
-  LayoutDashboard, CalendarDays 
+  LayoutDashboard, CalendarDays , Images
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Playfair_Display } from 'next/font/google';
@@ -110,8 +110,10 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Services', href: '/#services' },
+    { name: 'Gallery', href: '/gallery' },
     { name: 'Experience', href: '/#experience' },
     { name: 'Products', href: '/#products' },
+    
     // { name: 'Testimonials', href: '/#testimonials' },
   ];
 
