@@ -14,7 +14,7 @@ export const PRODUCTS: Product[] = [
     name: "Royal Argan Essence",
     price: 1200,
     description: "Cold-pressed Moroccan oil for deep hydration and golden shine.",
-    image: "/oil.jpg", // Make sure this exists in public/
+    image: "/images/products/shampo.jpg", // Make sure this exists in public/
     category: "Hair Care"
   },
   {
@@ -22,7 +22,7 @@ export const PRODUCTS: Product[] = [
     name: "24K Gold Facial Serum",
     price: 3500,
     description: "Infused with real gold flakes to rejuvenate and brighten skin.",
-    image: "/serum.jpg",
+    image: "/images/products/gold.jpg",
     category: "Skin Care"
   },
   {
@@ -30,7 +30,7 @@ export const PRODUCTS: Product[] = [
     name: "Silk Protein Mask",
     price: 1800,
     description: "Professional grade mask for damaged hair restoration.",
-    image: "/mask.jpg",
+    image: "/images/products/silk.jpg",
     category: "Treatments"
   },
   {
@@ -38,7 +38,7 @@ export const PRODUCTS: Product[] = [
     name: "Botanical Cleansing Gel",
     price: 950,
     description: "Gentle organic cleanser for a refreshed, luxury feel.",
-    image: "/cleanser.jpg",
+    image: "/images/products/botanic.jpg",
     category: "Skin Care"
   }
 ];

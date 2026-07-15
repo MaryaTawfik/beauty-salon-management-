@@ -12,6 +12,8 @@ import { getFavorites, toggleFavoriteId } from "@/lib/favorites";
 import { getActiveUser } from "@/lib/auth-utils";
 import { useServices } from "@/app/context/ServiceContext";
 import { cn } from "@/lib/utils";
+import { Playfair_Display } from "next/font/google";
+const playfair = Playfair_Display({ subsets: ["latin"], style: ["italic", "normal"] });
 
 export default function ServiceDetailPage({ params }: { params: Promise<{ category: string; slug: string }> }) {
   const resolvedParams = use(params);
@@ -47,7 +49,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
   if (!service) notFound();
 
   return (
-    <main className="min-h-screen bg-[#121212] text-white pt-32 pb-20 px-4">
+    <main className="min-h-screen bg-[#121212] text-white pt-32 lg:pt-40 pb-32 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-12">
           <Link href={`/services/${resolvedParams.category}`} className="flex items-center gap-2 text-[#D4AF7A] uppercase tracking-[0.2em] text-xs hover:opacity-70 transition-opacity">

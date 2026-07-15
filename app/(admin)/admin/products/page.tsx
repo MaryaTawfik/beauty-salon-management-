@@ -34,7 +34,7 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Remove this product?")) {
+    if (confirm("Remove this product from your luxury collection?")) {
       setProducts(prev => prev.filter(p => p.id !== id));
     }
   };
@@ -42,9 +42,7 @@ export default function AdminProductsPage() {
   if (!isMounted) return null;
 
   return (
-    // FIX: Added 'mt-6 lg:mt-12' for better spacing on large devices
     <div className="space-y-10 pb-20 mt-6 lg:mt-12">
-      
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
         <div className="space-y-2">
@@ -52,20 +50,15 @@ export default function AdminProductsPage() {
           <p className="text-white/40 text-[10px] uppercase tracking-[0.4em]">Curate your luxury collection</p>
         </div>
         
-        {/* IMPROVED BUTTON: Entire surface is now the hit-box */}
         <motion.button 
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleOpenAddModal}
           className="w-full md:w-auto relative group"
         >
-          {/* Subtle Glow Effect on Hover */}
           <div className="absolute inset-0 bg-[#D4AF7A] blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
-          
           <div className="relative bg-[#D4AF7A] text-[#121212] px-10 py-5 flex items-center justify-center gap-3 shadow-lg overflow-hidden">
-            {/* Shimmer effect inside the button */}
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-            
             <Plus size={20} strokeWidth={2.5} />
             <span className="text-xs font-bold uppercase tracking-[0.25em]">New Product</span>
           </div>
@@ -113,18 +106,16 @@ export default function AdminProductsPage() {
                     <p className="text-white/40 text-sm font-medium mt-2">{product.price} <span className="text-[10px] opacity-30">ETB</span></p>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <button 
                       onClick={() => handleOpenEditModal(product)} 
                       className="p-2 text-white/20 hover:text-white hover:bg-white/5 transition-all"
-                      title="Edit"
                     >
                       <Edit3 size={16} />
                     </button>
                     <button 
                       onClick={() => handleDelete(product.id)} 
                       className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/5 transition-all"
-                      title="Delete"
                     >
                       <Trash2 size={16} />
                     </button>

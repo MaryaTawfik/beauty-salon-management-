@@ -89,7 +89,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
         price: "400 ETB",
         duration: "45 Minutes",
         benefits: ["Elegant patterns", "Natural henna", "Custom designs"],
-        images: ["/images/services/henna.jpg","/images/services/hina.jpg","/images/services/hina2.png","/images/services/hinas1.png"],
+        images: ["/images/services/henna.jpg","/images/services/h1.jpg","/images/services/h3.jpg"],
          rating: 4.9,
         reviewsCount: 120
       },
@@ -218,7 +218,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
         price: "4000 ETB",
         duration: "2-3 Hours",
         benefits: ["Premium products", "Long wear", "Flawless finish"],
-        images: ["/images/services/bridal-makeup.jpg"],
+        images: ["/images/services/BM2.jpg","/images/services/BM.jpg","/images/services/BM1.jpg"],
          rating: 4.9,
         reviewsCount: 120
       },
@@ -286,7 +286,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
         price: "1500 ETB",
         duration: "2-3 Hours",
         benefits: ["Rich color", "Professional application", "Long-lasting shine"],
-        images: ["/images/services/full-color.jpg"],
+        images: ["/images/services/FC.jpg","/images/services/FC1.jpg","/images/services/FC2.jpg"],
          rating: 4.9,
         reviewsCount: 120
       },
@@ -298,7 +298,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
         price: "1800 ETB",
         duration: "3 Hours",
         benefits: ["Modern appearance", "Natural blend", "Premium finish"],
-        images: ["/images/services/highlights.jpg"],
+        images: ["/images/services/HC.jpg","/images/services/HC1.jpg","/images/services/HC2.jpg"],
          rating: 4.9,
         reviewsCount: 120
       },
@@ -321,7 +321,7 @@ export const SERVICES_DATA: ServiceCategory[] = [
         price: "15,000 ETB",
         duration: "Full Day",
         benefits: ["Bridal Hairstyle", "Bridal Makeup", "Bridal Henna", "Luxury Nail Service", "Facial Treatment", "VIP Consultation"],
-        images: ["/images/services/brid1.jpg", "/images/services/brid3.jpg"],
+        images: ["/images/services/B3.jpg", "/images/services/B4.jpg", "/images/services/B2.jpg", "/images/services/B.jpg", "/images/services/BS.jpg"],
          rating: 4.9,
         reviewsCount: 120
       },
