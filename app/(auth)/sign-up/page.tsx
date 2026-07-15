@@ -18,7 +18,7 @@ export default function SignUpPage() {
     if (result.success) {
       router.push("/sign-in");
     } else {
-      setError(result.message);
+      setError(result.message || "Registration failed. Please try again.");
     }
   };
 

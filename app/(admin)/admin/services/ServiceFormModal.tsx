@@ -14,7 +14,7 @@ interface Props {
 
 export default function ServiceFormModal({ isOpen, onClose, onSave, initialData }: Props) {
   const [formData, setFormData] = useState<SubService>({
-    id: '', slug: '', name: '', description: '', price: '', duration: '', benefits: [''], images: ['']
+    id: '', slug: '', name: '', description: '', price: '', duration: '', benefits: [''], images: [''], rating: 0, reviewsCount: 0
   });
 
   const [isAnyImageUploading, setIsAnyImageUploading] = useState(false);
@@ -25,7 +25,7 @@ export default function ServiceFormModal({ isOpen, onClose, onSave, initialData 
     } else {
       setFormData({
         id: Math.random().toString(36).substr(2, 9),
-        slug: '', name: '', description: '', price: '', duration: '', benefits: [''], images: ['']
+        slug: '', name: '', description: '', price: '', duration: '', benefits: [''], images: [''], rating: 0, reviewsCount: 0
       });
     }
   }, [initialData, isOpen]);

@@ -78,11 +78,11 @@ export default function CheckoutPage() {
           <section className="space-y-10">
             <h1 className="text-4xl font-light italic tracking-tight text-[#D4AF7A]">Shipping Sanctuary</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#1a1a1a] p-8 border border-white/5 shadow-2xl">
-              <Input label="Full Name" value={form.fullName} error={errors.fullName} onChange={v => setForm({...form, fullName: v})} />
-              <Input label="Phone Number" value={form.phone} error={errors.phone} onChange={v => setForm({...form, phone: v})} />
-              <Input label="City" placeholder="e.g. Addis Ababa" value={form.city} error={errors.city} onChange={v => setForm({...form, city: v})} />
+              <Input label="Full Name" value={form.fullName} error={errors.fullName} onChange={(v: string) => setForm({...form, fullName: v})} />
+              <Input label="Phone Number" value={form.phone} error={errors.phone} onChange={(v: string) => setForm({...form, phone: v})} />
+              <Input label="City" placeholder="e.g. Addis Ababa" value={form.city} error={errors.city} onChange={(v: string) => setForm({...form, city: v})} />
               <div className="md:col-span-2">
-                <Input label="Street Address" placeholder="Building, Apartment..." value={form.address} error={errors.address} onChange={v => setForm({...form, address: v})} />
+                <Input label="Street Address" placeholder="Building, Apartment..." value={form.address} error={errors.address} onChange={(v: string) => setForm({...form, address: v})} />
               </div>
               <Input label="Country" value={form.country} readOnly />
             </div>

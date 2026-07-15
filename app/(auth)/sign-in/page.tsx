@@ -34,7 +34,7 @@ export default function SignInPage() {
       }
     } else {
       // 5. ERROR: Show a luxury-styled error message
-      setError(result.message);
+      setError(result.message || "An error occurred. Please try again.");
     }
   };
 

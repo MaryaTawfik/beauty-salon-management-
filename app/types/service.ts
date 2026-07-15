@@ -6,7 +6,7 @@ export interface SubService{
     name: string;
     description:string;
     price:string;
-    duration: String;
+    duration: string;
     benefits:string[];
     images: string[];
     rating: number;
