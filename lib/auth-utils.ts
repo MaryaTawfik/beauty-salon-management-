@@ -1,5 +1,18 @@
 "use client";
 
+// 1. THE MASTER ADMIN SEED
+// This user is "burned" into the code. They will always be able to log in,
+// even if you click "Clear Site Data" in your browser.
+const MASTER_ADMIN = {
+  fullName: "L'Élite System Administrator",
+  email: "admin@thesalon.com",
+  password: "admin123", // You can change this to your desired password
+  role: "admin",
+  phone: "0900000000",
+  address: "Main Sanctuary, Addis Ababa",
+  loyaltyPoints: 9999
+};
+
 const USERS_KEY = "salon_users_db";
 const SESSION_KEY = "active_salon_user";
 
@@ -10,50 +23,74 @@ export const getStoredUsers = () => {
 };
 
 export const registerUser = (userData: any) => {
+  // 2. SECURITY GUARD: Prevent anyone from trying to register the admin email
+  if (userData.email === MASTER_ADMIN.email) {
+    return { success: false, message: "This identifier is reserved for system administration." };
+  }
+
   const users = getStoredUsers();
   if (users.find((u: any) => u.email === userData.email)) {
-    return { success: false, message: "Email already exists." };
+    return { success: false, message: "Email already exists in our sanctuary records." };
   }
-  const newUser = { ...userData, role: userData.email === 'admin@thesalon.com' ? 'admin' : 'user' };
+
+  const newUser = { 
+    ...userData, 
+    role: 'user', // Only the seeded admin can be admin in this prototype
+    createdAt: new Date().toISOString() 
+  };
+
   users.push(newUser);
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   return { success: true };
 };
 
 export const loginUser = (email: string, pass: string) => {
+  // 3. CHECK MASTER ADMIN FIRST (The "Secret Door")
+  if (email === MASTER_ADMIN.email && pass === MASTER_ADMIN.password) {
+    const sessionData = { ...MASTER_ADMIN };
+    // Remove password from the session object for security
+    delete (sessionData as any).password;
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    document.cookie = "isLoggedIn=true; path=/; max-height=86400";
+    document.cookie = "role=admin; path=/; max-height=86400";
+    
+    return { success: true, user: sessionData };
+  }
+
+  // 4. IF NOT MASTER ADMIN, CHECK THE LOCALSTORAGE "DATABASE"
   const users = getStoredUsers();
   const user = users.find((u: any) => u.email === email && u.password === pass);
 
   if (user) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    document.cookie = "isLoggedIn=true; path=/; max-age=86400";
-    document.cookie = `role=${user.role}; path=/; max-age=86400`;
-    return { success: true, user };
+    const sessionData = { ...user };
+    delete (sessionData as any).password;
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    document.cookie = "isLoggedIn=true; path=/; max-height=86400";
+    document.cookie = `role=${user.role}; path=/; max-height=86400`;
+    
+    return { success: true, user: sessionData };
   }
-  return { success: false, message: "Invalid credentials." };
+
+  return { success: false, message: "Invalid credentials. Please verify your entry." };
 };
 
 export const logoutUser = () => {
-  // 1. Remove the session from localStorage
-  localStorage.removeItem("active_salon_user");
-
-  // 2. Clear the Auth Cookies for middleware
+  localStorage.removeItem(SESSION_KEY);
   document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
   document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-
-  // 3. FORCE REFRESH: This is critical. It wipes the CartContext memory
-  // and redirects the user to the home page as a guest.
   window.location.href = "/"; 
 };
+
 export const getActiveUser = () => {
   if (typeof window === "undefined") return null;
-  const session = localStorage.getItem("active_salon_user");
+  const session = localStorage.getItem(SESSION_KEY);
   
   if (!session || session === "null" || session === "undefined") return null;
 
   try {
     const user = JSON.parse(session);
-    // CRITICAL: If the object exists but has no email, it's a fake session.
     if (!user || !user.email) return null; 
     return user;
   } catch (e) {
