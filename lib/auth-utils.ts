@@ -52,8 +52,8 @@ export const loginUser = (email: string, pass: string) => {
     delete (sessionData as any).password;
 
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.cookie = "isLoggedIn=true; path=/; max-height=86400";
-    document.cookie = "role=admin; path=/; max-height=86400";
+    document.cookie = "isLoggedIn=true; path=/; max-age=86400";
+    document.cookie = "role=admin; path=/; max-age=86400";
     
     return { success: true, user: sessionData };
   }
@@ -67,8 +67,8 @@ export const loginUser = (email: string, pass: string) => {
     delete (sessionData as any).password;
 
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.cookie = "isLoggedIn=true; path=/; max-height=86400";
-    document.cookie = `role=${user.role}; path=/; max-height=86400`;
+    document.cookie = "isLoggedIn=true; path=/; max-age=86400";
+    document.cookie = `role=${user.role}; path=/; max-age=86400`;
     
     return { success: true, user: sessionData };
   }

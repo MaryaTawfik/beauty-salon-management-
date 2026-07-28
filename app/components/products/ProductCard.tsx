@@ -6,19 +6,32 @@ import { motion } from 'framer-motion';
 import { Plus, ShoppingBag, Star, Check } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { cn } from '@/lib/utils';
-
+import { useRouter } from "next/navigation";
+import { getActiveUser } from "@/lib/auth-utils";
 export default function ProductCard({ product }: { product: any }) {
   const { addToCart } = useCart();
-  
+  const router = useRouter();
   // This state is what caused the error because it wasn't imported
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
-    addToCart(product);
-    setAdded(true);
-    // Visual feedback reset after 2 seconds
-    setTimeout(() => setAdded(false), 2000);
-  };
+  const activeUser = getActiveUser();
+
+  // User has not signed in
+  if (!activeUser) {
+    router.push("/sign-in");
+    return;
+  }
+
+  // User is signed in
+  addToCart(product);
+  setAdded(true);
+
+  // Reset the visual feedback after 2 seconds
+  setTimeout(() => {
+    setAdded(false);
+  }, 2000);
+};
 
   return (
     <motion.div 

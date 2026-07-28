@@ -1,17 +1,19 @@
+
 "use client";
 
-import React, { useState, useEffect, use } from 'react';
-import { notFound } from "next/navigation";
+import React, { useState, useEffect, use } from "react";
+import { notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, Star, Heart, ArrowLeft } from "lucide-react";
 import { getFavorites, toggleFavoriteId } from "@/lib/favorites";
 import { cn } from "@/lib/utils";
-import { useServices } from '@/app/context/ServiceContext';
-
+import { useServices } from "@/app/context/ServiceContext";
+import { getActiveUser } from "@/lib/auth-utils";
 export default function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
-  // 1. Unwrap the URL parameters
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const resolvedParams = use(params);
   const categorySlug = resolvedParams.category;
 
@@ -25,13 +27,30 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
   const categoryData = categories.find((s) => s.slug === categorySlug);
 
   useEffect(() => {
-    setIsMounted(true);
-    setFavorites(getFavorites());
-  }, []);
+  const activeUser = getActiveUser();
+
+  if (!activeUser) {
+    router.replace("/sign-in");
+    return;
+  }
+
+  setIsMounted(true);
+  setFavorites(getFavorites());
+  setCheckingAuth(false);
+}, [router]);
 
   // Hydration Guard
-  if (!isMounted || !servicesLoaded) return <div className="min-h-screen bg-[#121212]" />;
-  if (!categoryData) notFound();
+  if (checkingAuth || !isMounted || !servicesLoaded) {
+  return (
+    <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+      <p className="text-[#D4AF7A] text-xs uppercase tracking-[0.3em]">
+        Loading...
+      </p>
+    </div>
+  );
+}  
+if (!categoryData) notFound();
+
 
   const handleToggleFavorite = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
