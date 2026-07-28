@@ -1,7 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Product, CartItem } from '@/app/types/product';
+import { getActiveUser } from '@/lib/auth-utils';
 
 interface CartContextType {
   cart: CartItem[];
@@ -19,28 +21,55 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
-  // 1. Initial Load: Sync with LocalStorage
+  // 1. DYNAMIC KEY LOGIC: Unique key for every user
+  const getStorageKey = () => {
+    const user = getActiveUser();
+    return user?.email ? `cart_session_${user.email}` : null;
+  };
+
+  // 2. INITIAL LOAD: Strictly isolated by user
   useEffect(() => {
-    const savedCart = localStorage.getItem('salon_cart');
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Failed to parse cart data");
+    const key = getStorageKey();
+    
+    // Safety: Remove any old "generic" cart keys that might be lingering
+    localStorage.removeItem('salon_cart'); 
+    localStorage.removeItem('cart');
+
+    if (key) {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          setCart(JSON.parse(saved));
+        } catch (e) {
+          setCart([]);
+        }
       }
+    } else {
+      // IF GUEST: Force the memory state to be empty
+      setCart([]);
     }
     setIsMounted(true);
   }, []);
 
-  // 2. Persistence: Save to LocalStorage whenever cart changes
+  // 3. PERSISTENCE: Save only to the user-specific key
   useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('salon_cart', JSON.stringify(cart));
+    const key = getStorageKey();
+    if (isMounted && key) {
+      localStorage.setItem(key, JSON.stringify(cart));
     }
   }, [cart, isMounted]);
 
   const addToCart = (product: Product) => {
+    const user = getActiveUser();
+
+    // Redirection Guard
+    if (!user || !user.email) {
+      router.push('/sign-in');
+      return;
+    }
+
     setCart((prev) => {
       const existingItem = prev.find((item) => item.id === product.id);
       if (existingItem) {
@@ -64,13 +93,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return { ...item, quantity: newQty };
         }
         return item;
-      }).filter(item => item.quantity > 0) // Remove if quantity becomes 0
+      }).filter(item => item.quantity > 0)
     );
   };
 
   const clearCart = () => {
+    const key = getStorageKey();
+    if (key) localStorage.removeItem(key);
     setCart([]);
-    localStorage.removeItem('salon_cart');
   };
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);

@@ -1,12 +1,14 @@
 "use client";
 
-// 1. THE MASTER ADMIN SEED
-// This user is "burned" into the code. They will always be able to log in,
-// even if you click "Clear Site Data" in your browser.
+/**
+ * 1. THE MASTER ADMIN SEED
+ * This user is "burned" into the code for development.
+ * In this prototype, only this email will receive the 'admin' role.
+ */
 const MASTER_ADMIN = {
   fullName: "L'Élite System Administrator",
   email: "admin@thesalon.com",
-  password: "admin123", // You can change this to your desired password
+  password: "admin123", 
   role: "admin",
   phone: "0900000000",
   address: "Main Sanctuary, Addis Ababa",
@@ -16,14 +18,23 @@ const MASTER_ADMIN = {
 const USERS_KEY = "salon_users_db";
 const SESSION_KEY = "active_salon_user";
 
+/**
+ * Helper to fetch all registered users from browser storage
+ */
 export const getStoredUsers = () => {
   if (typeof window === "undefined") return [];
   const users = localStorage.getItem(USERS_KEY);
   return users ? JSON.parse(users) : [];
 };
 
+/**
+ * Registration Logic
+ * Prevents duplicate emails and protects the admin identifier
+ */
 export const registerUser = (userData: any) => {
-  // 2. SECURITY GUARD: Prevent anyone from trying to register the admin email
+  if (typeof window === "undefined") return { success: false };
+
+  // SECURITY GUARD: Prevent registering as the master admin
   if (userData.email === MASTER_ADMIN.email) {
     return { success: false, message: "This identifier is reserved for system administration." };
   }
@@ -35,7 +46,7 @@ export const registerUser = (userData: any) => {
 
   const newUser = { 
     ...userData, 
-    role: 'user', // Only the seeded admin can be admin in this prototype
+    role: 'user', 
     createdAt: new Date().toISOString() 
   };
 
@@ -44,45 +55,68 @@ export const registerUser = (userData: any) => {
   return { success: true };
 };
 
+/**
+ * Login Logic
+ * Sets both LocalStorage (for UI) and Cookies (for Middleware)
+ */
 export const loginUser = (email: string, pass: string) => {
-  // 3. CHECK MASTER ADMIN FIRST (The "Secret Door")
-  if (email === MASTER_ADMIN.email && pass === MASTER_ADMIN.password) {
-    const sessionData = { ...MASTER_ADMIN };
-    // Remove password from the session object for security
-    delete (sessionData as any).password;
+  if (typeof window === "undefined") return { success: false };
 
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.cookie = "isLoggedIn=true; path=/; max-height=86400";
-    document.cookie = "role=admin; path=/; max-height=86400";
-    
-    return { success: true, user: sessionData };
+  let authenticatedUser = null;
+
+  // Check Master Admin first
+  if (email === MASTER_ADMIN.email && pass === MASTER_ADMIN.password) {
+    authenticatedUser = { ...MASTER_ADMIN };
+  } else {
+    // Check LocalStorage "Database"
+    const users = getStoredUsers();
+    const found = users.find((u: any) => u.email === email && u.password === pass);
+    if (found) authenticatedUser = { ...found };
   }
 
-  // 4. IF NOT MASTER ADMIN, CHECK THE LOCALSTORAGE "DATABASE"
-  const users = getStoredUsers();
-  const user = users.find((u: any) => u.email === email && u.password === pass);
+  if (authenticatedUser) {
+    // Safety: Never store password in session
+    delete (authenticatedUser as any).password;
 
-  if (user) {
-    const sessionData = { ...user };
-    delete (sessionData as any).password;
+    // Save Session to Storage
+    localStorage.setItem(SESSION_KEY, JSON.stringify(authenticatedUser));
 
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.cookie = "isLoggedIn=true; path=/; max-height=86400";
-    document.cookie = `role=${user.role}; path=/; max-height=86400`;
+    /**
+     * Set Cookies for Middleware Protection
+     * max-age=86400 (1 day in seconds)
+     */
+    document.cookie = `isLoggedIn=true; path=/; max-age=86400; SameSite=Lax`;
+    document.cookie = `role=${authenticatedUser.role}; path=/; max-age=86400; SameSite=Lax`;
     
-    return { success: true, user: sessionData };
+    return { success: true, user: authenticatedUser };
   }
 
   return { success: false, message: "Invalid credentials. Please verify your entry." };
 };
 
+/**
+ * Logout Logic
+ * Completely clears storage and cookies, then forces a hard reload
+ * to wipe all React Context states (like the Cart).
+ */
 export const logoutUser = () => {
+  if (typeof window === "undefined") return;
+
+  // 1. Wipe Browser Storage
   localStorage.removeItem(SESSION_KEY);
+
+  // 2. Clear Cookies by setting expiration to the past
   document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
   document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+
+  // 3. HARD REFRESH
+  // This is vital to reset all Providers/Contexts (Cart, Chat, etc.)
   window.location.href = "/"; 
 };
 
+/**
+ * Helper to get the current session safely
+ */
 export const getActiveUser = () => {
   if (typeof window === "undefined") return null;
   const session = localStorage.getItem(SESSION_KEY);
@@ -91,6 +125,7 @@ export const getActiveUser = () => {
 
   try {
     const user = JSON.parse(session);
+    // Strict check: User must have an email to be considered valid
     if (!user || !user.email) return null; 
     return user;
   } catch (e) {

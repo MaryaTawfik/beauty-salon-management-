@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 const BANKS = [
-  { id: 'telebirr', name: 'Telebirr', account: '0988944313', owner: "MARYA T.", url: 'https://telebirr.et', icon: Smartphone },
-  { id: 'cbe', name: 'CBE Mobile', account: '100055667788', owner: "MARYA T.", url: 'https://www.cbe.com.et', icon: Landmark },
-  { id: 'awash', name: 'Awash Bank', account: '0132055667788', owner: "MARYA T.", url: 'https://www.awashbank.com', icon: Landmark },
+  { id: 'telebirr', name: 'Telebirr', account: '0988944313', owner: "MARYA T.", url: 'https://www.ethiotelecom.et/telebirr/', icon: Smartphone },
+  { id: 'cbe', name: 'CBE Mobile', account: '100055667788', owner: "MARYA T.", url: 'https://cbeib.cbe.com.et/', icon: Landmark },
+  { id: 'awash', name: 'Abyssinia Bank', account: '0132055667788', owner: "MARYA T.", url: 'https://www.bankofabyssinia.com/', icon: Landmark },
 ];
 
 export default function PaymentPage({ params }: { params: Promise<{ id: string }> }) {

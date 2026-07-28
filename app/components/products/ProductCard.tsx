@@ -1,23 +1,29 @@
 "use client";
 
-import React, { useState } from 'react'; // FIXED: Added useState here
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Plus, ShoppingBag, Star, Check } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { cn } from '@/lib/utils';
+import { getActiveUser } from '@/lib/auth-utils'; // Added auth util
 
 export default function ProductCard({ product }: { product: any }) {
   const { addToCart } = useCart();
-  
-  // This state is what caused the error because it wasn't imported
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
+    // 1. Check if user is authenticated locally before showing "Added" state
+    const user = getActiveUser();
+    
+    // Always call addToCart (the context will handle the actual redirect)
     addToCart(product);
-    setAdded(true);
-    // Visual feedback reset after 2 seconds
-    setTimeout(() => setAdded(false), 2000);
+
+    // 2. Only show the "Success" checkmark if the user is logged in
+    if (user && user.email) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
   };
 
   return (
@@ -27,7 +33,6 @@ export default function ProductCard({ product }: { product: any }) {
       viewport={{ once: true }}
       className="group relative bg-[#1a1a1a] border border-white/5 overflow-hidden rounded-none"
     >
-      {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden bg-zinc-900">
         <Image 
           src={product.image || '/placeholder.jpg'} 
@@ -36,7 +41,6 @@ export default function ProductCard({ product }: { product: any }) {
           className="object-cover transition-transform duration-1000 group-hover:scale-110 opacity-90 group-hover:opacity-100" 
         />
         
-        {/* Desktop Hover Overlay */}
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center p-6">
            <button 
             onClick={handleAdd}
@@ -55,7 +59,6 @@ export default function ProductCard({ product }: { product: any }) {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-6 space-y-4 text-left">
         <div className="flex justify-between items-start">
           <div>
@@ -79,7 +82,6 @@ export default function ProductCard({ product }: { product: any }) {
             {product.price} <span className="text-[10px] text-[#D4AF7A] uppercase ml-1">ETB</span>
           </span>
           
-          {/* Mobile-Only Quick Add Button */}
           <button 
             onClick={handleAdd}
             className={cn(
