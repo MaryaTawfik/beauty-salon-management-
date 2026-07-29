@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * 1. THE MASTER ADMIN SEED
- * This user is "burned" into the code for development.
- * In this prototype, only this email will receive the 'admin' role.
- */
 const MASTER_ADMIN = {
   fullName: "L'Élite System Administrator",
   email: "admin@thesalon.com",
@@ -17,118 +12,119 @@ const MASTER_ADMIN = {
 
 const USERS_KEY = "salon_users_db";
 const SESSION_KEY = "active_salon_user";
+const AUTH_EVENT = "salon-auth-changed";
 
-/**
- * Helper to fetch all registered users from browser storage
- */
+const readCookie = (name: string) => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+const writeCookie = (name: string, value: string) => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=86400; SameSite=Lax`;
+};
+
+const clearCookie = (name: string) => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+};
+
+const emitAuthChange = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(AUTH_EVENT));
+  }
+};
+
+export const subscribeToAuthChanges = (callback: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(AUTH_EVENT, callback);
+  return () => window.removeEventListener(AUTH_EVENT, callback);
+};
+
 export const getStoredUsers = () => {
   if (typeof window === "undefined") return [];
   const users = localStorage.getItem(USERS_KEY);
   return users ? JSON.parse(users) : [];
 };
 
-/**
- * Registration Logic
- * Prevents duplicate emails and protects the admin identifier
- */
 export const registerUser = (userData: any) => {
   if (typeof window === "undefined") return { success: false };
-
-  // SECURITY GUARD: Prevent registering as the master admin
   if (userData.email === MASTER_ADMIN.email) {
-    return { success: false, message: "This identifier is reserved for system administration." };
+    return { success: false, message: "This identifier is reserved." };
   }
-
   const users = getStoredUsers();
   if (users.find((u: any) => u.email === userData.email)) {
-    return { success: false, message: "Email already exists in our sanctuary records." };
+    return { success: false, message: "Email already exists." };
   }
-
-  const newUser = { 
-    ...userData, 
-    role: 'user', 
-    createdAt: new Date().toISOString() 
-  };
-
+  const newUser = { ...userData, role: 'user', createdAt: new Date().toISOString() };
   users.push(newUser);
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   return { success: true };
 };
 
-/**
- * Login Logic
- * Sets both LocalStorage (for UI) and Cookies (for Middleware)
- */
 export const loginUser = (email: string, pass: string) => {
   if (typeof window === "undefined") return { success: false };
 
-  let authenticatedUser = null;
-
-  // Check Master Admin first
+  let authUser = null;
   if (email === MASTER_ADMIN.email && pass === MASTER_ADMIN.password) {
-    authenticatedUser = { ...MASTER_ADMIN };
+    authUser = { ...MASTER_ADMIN };
   } else {
-    // Check LocalStorage "Database"
     const users = getStoredUsers();
     const found = users.find((u: any) => u.email === email && u.password === pass);
-    if (found) authenticatedUser = { ...found };
+    if (found) authUser = { ...found };
   }
 
-  if (authenticatedUser) {
-    // Safety: Never store password in session
-    delete (authenticatedUser as any).password;
+  if (authUser) {
+    delete (authUser as any).password;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(authUser));
 
-    // Save Session to Storage
-    localStorage.setItem(SESSION_KEY, JSON.stringify(authenticatedUser));
+    writeCookie("isLoggedIn", "true");
+    writeCookie("role", authUser.role);
+    writeCookie("salon_session_user", JSON.stringify(authUser));
 
-    /**
-     * Set Cookies for Middleware Protection
-     * max-age=86400 (1 day in seconds)
-     */
-    document.cookie = `isLoggedIn=true; path=/; max-age=86400; SameSite=Lax`;
-    document.cookie = `role=${authenticatedUser.role}; path=/; max-age=86400; SameSite=Lax`;
+    emitAuthChange();
     
-    return { success: true, user: authenticatedUser };
+    return { success: true, user: authUser };
   }
-
-  return { success: false, message: "Invalid credentials. Please verify your entry." };
+  return { success: false, message: "Invalid credentials." };
 };
 
-/**
- * Logout Logic
- * Completely clears storage and cookies, then forces a hard reload
- * to wipe all React Context states (like the Cart).
- */
 export const logoutUser = () => {
   if (typeof window === "undefined") return;
-
-  // 1. Wipe Browser Storage
   localStorage.removeItem(SESSION_KEY);
-
-  // 2. Clear Cookies by setting expiration to the past
-  document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-  document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-
-  // 3. HARD REFRESH
-  // This is vital to reset all Providers/Contexts (Cart, Chat, etc.)
+  clearCookie("isLoggedIn");
+  clearCookie("role");
+  clearCookie("salon_session_user");
+  emitAuthChange();
   window.location.href = "/"; 
 };
 
-/**
- * Helper to get the current session safely
- */
 export const getActiveUser = () => {
   if (typeof window === "undefined") return null;
-  const session = localStorage.getItem(SESSION_KEY);
-  
-  if (!session || session === "null" || session === "undefined") return null;
 
-  try {
-    const user = JSON.parse(session);
-    // Strict check: User must have an email to be considered valid
-    if (!user || !user.email) return null; 
-    return user;
-  } catch (e) {
-    return null;
+  const session = localStorage.getItem(SESSION_KEY);
+  if (session && session !== "null" && session !== "undefined") {
+    try {
+      const user = JSON.parse(session);
+      if (user && user.email) return user;
+    } catch (e) {
+      // fall through to cookie recovery
+    }
   }
+
+  const cookieSession = readCookie("salon_session_user");
+  if (cookieSession) {
+    try {
+      const user = JSON.parse(cookieSession);
+      if (user && user.email) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        return user;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  return null;
 };

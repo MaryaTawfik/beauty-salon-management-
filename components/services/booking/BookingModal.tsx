@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Check, Clock, Loader2, User, ChevronDown, Scissors } from 'lucide-react';
 import { useBookings } from '@/app/context/BookingContext';
 import { useServices } from '@/app/context/ServiceContext';
-import { getActiveUser } from '@/lib/auth-utils';
+import { getActiveUser, subscribeToAuthChanges } from '@/lib/auth-utils';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,7 @@ export default function BookingModal({ isOpen, onClose, serviceName: initialServ
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [authUser, setAuthUser] = useState<any>(null);
 
   // Flatten all available services from the CMS/Context
   const allRituals = categories.flatMap(cat => cat.subServices);
@@ -37,6 +38,14 @@ export default function BookingModal({ isOpen, onClose, serviceName: initialServ
     !s.isBooked && 
     s.allowedServices?.includes(selectedService)
   );
+
+  useEffect(() => {
+    const syncAuth = () => setAuthUser(getActiveUser());
+    syncAuth();
+    const unsubscribe = subscribeToAuthChanges(syncAuth);
+
+    return () => unsubscribe();
+  }, []);
 
   // Reset or initialize state when modal opens
   useEffect(() => {
@@ -49,11 +58,10 @@ export default function BookingModal({ isOpen, onClose, serviceName: initialServ
   }, [isOpen, initialService, initialPrice]);
 
   const handleConfirm = () => {
-    const user = getActiveUser();
-
-    if (!user || !user.email) {
+    if (!authUser?.email) {
       onClose();
-      router.push('/sign-in');
+      const callbackUrl = typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : '/';
+      router.push(`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
 
@@ -70,8 +78,8 @@ export default function BookingModal({ isOpen, onClose, serviceName: initialServ
         selectedService, 
         selectedPrice, 
         selectedSlotId, 
-        user.fullName, 
-        user.phone, 
+        authUser.fullName, 
+        authUser.phone, 
         selectedSlot.stylistName
       );
       

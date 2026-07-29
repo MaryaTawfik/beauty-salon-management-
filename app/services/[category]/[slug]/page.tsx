@@ -9,7 +9,7 @@ import BookingModal from "@/components/services/booking/BookingModal";
 import { CheckCircle2, Clock, Tag, Calendar, ArrowLeft, Star, Heart, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getFavorites, toggleFavoriteId } from "@/lib/favorites";
-import { getActiveUser } from "@/lib/auth-utils";
+import { getActiveUser, subscribeToAuthChanges } from "@/lib/auth-utils";
 import { useServices } from "@/app/context/ServiceContext";
 import { cn } from "@/lib/utils";
 import { Playfair_Display } from "next/font/google";
@@ -23,25 +23,32 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ catego
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [authUser, setAuthUser] = useState<any>(null);
 
   const categoryData = categories.find((c) => c.slug === resolvedParams.category);
   const service = categoryData?.subServices.find((s) => s.slug === resolvedParams.slug);
 
   useEffect(() => {
     setIsMounted(true);
+    const syncAuth = () => setAuthUser(getActiveUser());
+    syncAuth();
+    const unsubscribe = subscribeToAuthChanges(syncAuth);
+
     if (service) {
       const favs = getFavorites();
       setIsFavorited(favs.includes(service.id));
     }
+
+    return () => unsubscribe();
   }, [service]);
 
   // --- SECURITY GUARD FOR DETAIL PAGE BOOKING ---
   const handleBookingClick = () => {
-    const user = getActiveUser();
-    if (!user || !user.email) {
-      router.push('/sign-in'); // Redirect guest
+    if (!authUser?.email) {
+      const callbackUrl = `/services/${resolvedParams.category}/${resolvedParams.slug}`;
+      router.push(`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     } else {
-      setIsBookingOpen(true); // Open for member
+      setIsBookingOpen(true);
     }
   };
 
