@@ -12,30 +12,16 @@ const MASTER_ADMIN = {
 
 const USERS_KEY = "salon_users_db";
 const SESSION_KEY = "active_salon_user";
-const AUTH_EVENT = "salon-auth-changed";
+const AUTH_EVENT = "salon-auth-changed"; // Secret event for the browser to hear
 
-const readCookie = (name: string) => {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-};
-
-const writeCookie = (name: string, value: string) => {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=86400; SameSite=Lax`;
-};
-
-const clearCookie = (name: string) => {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
-};
-
+// Helper to notify other components when auth changes
 const emitAuthChange = () => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(AUTH_EVENT));
   }
 };
 
+// THE MISSING FUNCTION:
 export const subscribeToAuthChanges = (callback: () => void) => {
   if (typeof window === "undefined") return () => {};
   window.addEventListener(AUTH_EVENT, callback);
@@ -48,15 +34,16 @@ export const getStoredUsers = () => {
   return users ? JSON.parse(users) : [];
 };
 
+const writeAuthCookie = (name: string, value: string) => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=${value}; path=/; max-age=86400; SameSite=Lax;`;
+};
+
 export const registerUser = (userData: any) => {
   if (typeof window === "undefined") return { success: false };
-  if (userData.email === MASTER_ADMIN.email) {
-    return { success: false, message: "This identifier is reserved." };
-  }
+  if (userData.email === MASTER_ADMIN.email) return { success: false, message: "Reserved." };
   const users = getStoredUsers();
-  if (users.find((u: any) => u.email === userData.email)) {
-    return { success: false, message: "Email already exists." };
-  }
+  if (users.find((u: any) => u.email === userData.email)) return { success: false, message: "Exists." };
   const newUser = { ...userData, role: 'user', createdAt: new Date().toISOString() };
   users.push(newUser);
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
@@ -76,16 +63,14 @@ export const loginUser = (email: string, pass: string) => {
   }
 
   if (authUser) {
-    delete (authUser as any).password;
-    localStorage.setItem(SESSION_KEY, JSON.stringify(authUser));
-
-    writeCookie("isLoggedIn", "true");
-    writeCookie("role", authUser.role);
-    writeCookie("salon_session_user", JSON.stringify(authUser));
-
-    emitAuthChange();
+    const sessionData = { ...authUser };
+    delete (sessionData as any).password;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    writeAuthCookie("isLoggedIn", "true");
+    writeAuthCookie("role", authUser.role);
     
-    return { success: true, user: authUser };
+    emitAuthChange(); // Notify components
+    return { success: true, user: sessionData };
   }
   return { success: false, message: "Invalid credentials." };
 };
@@ -93,38 +78,18 @@ export const loginUser = (email: string, pass: string) => {
 export const logoutUser = () => {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SESSION_KEY);
-  clearCookie("isLoggedIn");
-  clearCookie("role");
-  clearCookie("salon_session_user");
-  emitAuthChange();
+  document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+  document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+  emitAuthChange(); // Notify components
   window.location.href = "/"; 
 };
 
 export const getActiveUser = () => {
   if (typeof window === "undefined") return null;
-
   const session = localStorage.getItem(SESSION_KEY);
-  if (session && session !== "null" && session !== "undefined") {
-    try {
-      const user = JSON.parse(session);
-      if (user && user.email) return user;
-    } catch (e) {
-      // fall through to cookie recovery
-    }
-  }
-
-  const cookieSession = readCookie("salon_session_user");
-  if (cookieSession) {
-    try {
-      const user = JSON.parse(cookieSession);
-      if (user && user.email) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-        return user;
-      }
-    } catch (e) {
-      return null;
-    }
-  }
-
-  return null;
+  if (!session || session === "null" || session === "undefined") return null;
+  try {
+    const user = JSON.parse(session);
+    return (user && user.email) ? user : null;
+  } catch (e) { return null; }
 };

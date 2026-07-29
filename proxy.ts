@@ -1,26 +1,34 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Rename the function to proxy
 export function proxy(request: NextRequest) {
-  const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true'; 
-  const isAdmin = request.cookies.get('role')?.value === 'admin';
   const { pathname } = request.nextUrl;
+  
+  // 1. Get cookies
+  const isLoggedIn = request.cookies.get('isLoggedIn')?.value === 'true';
+  const role = request.cookies.get('role')?.value;
 
-  if (pathname.startsWith('/services') && !isLoggedIn) {
-    return NextResponse.redirect(new URL('/sign-in', request.url));
+  // 2. Define Protected Paths
+  const isServicePage = pathname.startsWith('/services');
+  const isAdminPage = pathname.startsWith('/admin');
+  const isProfilePage = pathname.startsWith('/profile');
+
+  // 3. Logic: Redirect if not logged in
+  if ((isServicePage || isAdminPage || isProfilePage) && !isLoggedIn) {
+    const loginUrl = new URL('/sign-in', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname.startsWith('/admin')) {
-    if (!isLoggedIn || !isAdmin) {
-      return NextResponse.redirect(new URL('/sign-in', request.url));
-    }
+  // 4. Role Logic: Block non-admins from /admin
+  if (isAdminPage && role !== 'admin') {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();
 }
 
-// Keep your specific matcher
 export const config = {
-  matcher: ['/services/:path*', '/admin/:path*'],
+  // Exclude static files, images, and api routes from running the proxy
+  matcher: ['/((?!api|_next/static|_next/image|images|favicon.ico).*)'],
 };
