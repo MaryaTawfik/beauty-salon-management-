@@ -52,9 +52,9 @@ export const loginUser = (email: string, pass: string) => {
     delete (sessionData as any).password;
 
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.cookie = "isLoggedIn=true; path=/; max-age=86400";
-    document.cookie = "role=admin; path=/; max-age=86400";
-    
+    document.cookie = "isLoggedIn=true; path=/; max-age=86400; SameSite=Lax";
+    document.cookie = "role=admin; path=/; max-age=86400; SameSite=Lax";
+
     return { success: true, user: sessionData };
   }
 
@@ -67,8 +67,8 @@ export const loginUser = (email: string, pass: string) => {
     delete (sessionData as any).password;
 
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    document.cookie = "isLoggedIn=true; path=/; max-age=86400";
-    document.cookie = `role=${user.role}; path=/; max-age=86400`;
+    document.cookie = "isLoggedIn=true; path=/; max-age=86400; SameSite=Lax";
+    document.cookie = `role=${user.role}; path=/; max-age=86400; SameSite=Lax`;
     
     return { success: true, user: sessionData };
   }
@@ -77,10 +77,14 @@ export const loginUser = (email: string, pass: string) => {
 };
 
 export const logoutUser = () => {
+  // Remove the saved user session
   localStorage.removeItem(SESSION_KEY);
-  document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-  document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-  window.location.href = "/"; 
+
+  // Delete authentication cookies
+  document.cookie = "isLoggedIn=; path=/; max-age=0; SameSite=Lax";
+
+  document.cookie = "role=; path=/; max-age=0; SameSite=Lax";
+   window.location.href = "/";
 };
 
 export const getActiveUser = () => {
