@@ -79,7 +79,7 @@ export const loginUser = (email: string, pass: string) => {
 export const logoutUser = () => {
   // Remove the saved user session
   localStorage.removeItem(SESSION_KEY);
-
+    localStorage.removeItem("salon_cart");
   // Delete authentication cookies
   document.cookie = "isLoggedIn=; path=/; max-age=0; SameSite=Lax";
 
